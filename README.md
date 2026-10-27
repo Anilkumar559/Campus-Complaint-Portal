@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CampusCare — Campus Complaint Management System
 
 A third-semester C++ subject project with a connected web frontend. The C++ backend manages complaint records and persists them in a text file; HTML/CSS/JavaScript provide the browser interface.
@@ -142,3 +143,7 @@ git push
 ```
 
 GitHub authentication may ask you to sign in via a browser or use a personal access token; your normal account password is not accepted for HTTPS Git pushes. Never commit passwords, tokens, or real student complaint records.
+=======
+# Campus-Complaint-Portal
+C++ Project
+>>>>>>> ce620bf8f38c95d5e53759bae8262a8006a4b71f
