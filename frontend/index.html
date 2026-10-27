@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A simple college campus complaint management portal built with C++, HTML, CSS and JavaScript.">
+  <title>CampusCare | Complaint Portal</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="#home" aria-label="CampusCare home"><span class="brand-mark">C</span><span>Campus<span class="brand-light">Care</span><small>COMPLAINT PORTAL</small></span></a>
+    <nav><a href="#home">Dashboard</a><a href="#submit">Submit complaint</a><a href="#admin">Admin panel</a></nav>
+    <span class="live-pill"><i></i> Portal online</span>
+  </header>
+  <main class="container" id="home">
+    <section class="hero"><div><p class="eyebrow">YOUR CAMPUS, BETTER</p><h1>Make campus<br><span>work better.</span></h1><p class="hero-copy">Report a campus issue, follow its progress, and help make everyday college life better for everyone.</p><a class="button button-primary" href="#submit">＋ Submit a complaint</a></div><div class="hero-art" aria-hidden="true"><div class="art-circle"></div><div class="art-card card-one">✓ <span>Issue reported</span></div><div class="art-building"><div class="roof"></div><div class="building-body"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="building-door"></div></div><div class="art-card card-two"><span class="check-round">✓</span><div><b>Campus care</b><small>One issue at a time</small></div></div></div></section>
+    <section class="stats" aria-label="Complaint statistics"><article class="stat-card"><span class="stat-icon purple">▤</span><div><p>Total complaints</p><strong id="totalCount">0</strong></div><span class="stat-note">All reports</span></article><article class="stat-card"><span class="stat-icon orange">◷</span><div><p>Pending</p><strong id="pendingCount">0</strong></div><span class="stat-note">Awaiting action</span></article><article class="stat-card"><span class="stat-icon blue">↻</span><div><p>In progress</p><strong id="progressCount">0</strong></div><span class="stat-note">Being handled</span></article><article class="stat-card"><span class="stat-icon green">✓</span><div><p>Resolved</p><strong id="resolvedCount">0</strong></div><span class="stat-note">Issues fixed</span></article></section>
+    <section class="content-grid" id="submit"><div class="panel form-panel"><div class="section-heading"><div><p class="eyebrow">LET US KNOW</p><h2>Submit a complaint</h2><p class="muted">Share a few details so the right team can help.</p></div><span class="step-badge">01 / REPORT</span></div>
+      <form id="complaintForm"><div class="field-row"><label>Student name<input id="studentName" name="studentName" maxlength="80" placeholder="e.g. Rahul Kumar" required></label><label>Roll number<input id="rollNumber" name="rollNumber" maxlength="30" placeholder="e.g. 23CS101" required></label></div>
+        <label>Complaint category<select id="category" name="category" required><option value="">Choose a category</option><option>Wi-Fi and Internet</option><option>Classroom Facilities</option><option>Hostel</option><option>Library</option><option>Cleanliness</option><option>Electrical Problems</option><option>Other</option></select></label>
+        <label>Describe the issue<textarea id="description" name="description" rows="4" maxlength="500" placeholder="Tell us where the problem is and what happened..." required></textarea><span class="field-hint">Maximum 500 characters</span></label>
+        <button class="button button-primary full-width" type="submit">Submit complaint <span>→</span></button><p class="form-message" id="formMessage" role="status" aria-live="polite"></p>
+      </form></div>
+      <aside class="side-column"><div class="tip-card"><span class="tip-icon">✦</span><h3>Good to know</h3><p>Every complaint gets a unique ID. Keep it handy to find your report later.</p><div class="tip-divider"></div><p class="tip-small"><b>Be specific.</b> Include the location and details so the issue can be resolved faster.</p></div><div class="help-card"><span class="help-icon">?</span><div><b>Need urgent help?</b><p>For emergencies, contact your college office directly.</p></div></div></aside></section>
+    <section class="panel complaints-panel" id="admin"><div class="section-heading table-heading"><div><p class="eyebrow">TRACK & MANAGE</p><h2>Complaint records</h2><p class="muted">View reports and update their status from the admin panel.</p></div><span class="record-count" id="recordCount">0 records</span></div>
+      <div class="toolbar"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search by ID, name, roll no..." aria-label="Search complaints"></label><select id="statusFilter" aria-label="Filter by status"><option value="All">All statuses</option><option>Pending</option><option>In Progress</option><option>Resolved</option></select><button class="button button-secondary" id="refreshButton" type="button">↻ Refresh</button></div>
+      <div class="table-wrap"><table><thead><tr><th>COMPLAINT</th><th>STUDENT</th><th>CATEGORY</th><th>DESCRIPTION</th><th>STATUS</th><th>ADMIN ACTION</th></tr></thead><tbody id="complaintsBody"><tr><td colspan="6" class="empty-cell">Loading complaints...</td></tr></tbody></table></div>
+      <div class="table-footer"><span>CampusCare · Student services</span><span id="lastUpdated">Waiting for data</span></div>
+    </section>
+    <footer><span>© 2026 CampusCare · C++ subject project</span><span>Built with C++ · HTML · CSS · JavaScript</span></footer>
+  </main><script src="script.js"></script>
+</body></html>
