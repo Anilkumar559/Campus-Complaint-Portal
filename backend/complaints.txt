@@ -1,0 +1,4 @@
+101|Chandu|AP25110010838|B-204|Electrical|High|Resolved|Ceiling fan regulator broken and sparking in room|2026-11-10 09:15:00|2026-11-11 14:20:00
+102|Simhadri|AP25110010999|V-711|Wi-Fi and Internet|Medium|In Progress|Frequent packet loss and slow Wi-Fi speed|2026-11-11 11:30:00|2026-11-12 10:05:00
+103|Simhadri|AP25110010999|111|Plumbing Problem|High|Pending|Water leakage near washroom corridor on 1st floor|2026-11-12 16:45:00|2026-11-12 16:45:00
+104|Omkar|AP25110010888|12|Classroom & Lab|Medium|Pending|flour|2026-11-12 18:45:09|2026-11-12 18:45:09

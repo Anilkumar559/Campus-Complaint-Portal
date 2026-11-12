@@ -1,30 +1,217 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A simple college campus complaint management portal built with C++, HTML, CSS and JavaScript.">
-  <title>CampusCare | Complaint Portal</title><link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusCare — Student Grievance &amp; Facility Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="#home" aria-label="CampusCare home"><span class="brand-mark">C</span><span>Campus<span class="brand-light">Care</span><small>COMPLAINT PORTAL</small></span></a>
-    <nav><a href="#home">Dashboard</a><a href="#submit">Submit complaint</a><a href="#admin">Admin panel</a></nav>
-    <span class="live-pill"><i></i> Portal online</span>
+  <!-- Hero Header -->
+  <header class="hero-header">
+    <div class="container hero-topbar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <h1>CampusCare</h1>
+          <p class="subtitle">Campus Facility &amp; Student Grievance Command Center</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <span id="serverStatus" class="status-pill status-checking">Connecting...</span>
+        <button id="refreshBtn" class="btn btn-glass" type="button" title="Sync records with C++ server">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 16h5v5"/>
+          </svg>
+          Sync Data
+        </button>
+      </div>
+    </div>
   </header>
-  <main class="container" id="home">
-    <section class="hero"><div><p class="eyebrow">YOUR CAMPUS, BETTER</p><h1>Make campus<br><span>work better.</span></h1><p class="hero-copy">Report a campus issue, follow its progress, and help make everyday college life better for everyone.</p><a class="button button-primary" href="#submit">＋ Submit a complaint</a></div><div class="hero-art" aria-hidden="true"><div class="art-circle"></div><div class="art-card card-one">✓ <span>Issue reported</span></div><div class="art-building"><div class="roof"></div><div class="building-body"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="building-door"></div></div><div class="art-card card-two"><span class="check-round">✓</span><div><b>Campus care</b><small>One issue at a time</small></div></div></div></section>
-    <section class="stats" aria-label="Complaint statistics"><article class="stat-card"><span class="stat-icon purple">▤</span><div><p>Total complaints</p><strong id="totalCount">0</strong></div><span class="stat-note">All reports</span></article><article class="stat-card"><span class="stat-icon orange">◷</span><div><p>Pending</p><strong id="pendingCount">0</strong></div><span class="stat-note">Awaiting action</span></article><article class="stat-card"><span class="stat-icon blue">↻</span><div><p>In progress</p><strong id="progressCount">0</strong></div><span class="stat-note">Being handled</span></article><article class="stat-card"><span class="stat-icon green">✓</span><div><p>Resolved</p><strong id="resolvedCount">0</strong></div><span class="stat-note">Issues fixed</span></article></section>
-    <section class="content-grid" id="submit"><div class="panel form-panel"><div class="section-heading"><div><p class="eyebrow">LET US KNOW</p><h2>Submit a complaint</h2><p class="muted">Share a few details so the right team can help.</p></div><span class="step-badge">01 / REPORT</span></div>
-      <form id="complaintForm"><div class="field-row"><label>Student name<input id="studentName" name="studentName" maxlength="80" placeholder="e.g. Rahul Kumar" required></label><label>Roll number<input id="rollNumber" name="rollNumber" maxlength="30" placeholder="e.g. 23CS101" required></label></div>
-        <label>Complaint category<select id="category" name="category" required><option value="">Choose a category</option><option>Wi-Fi and Internet</option><option>Classroom Facilities</option><option>Hostel</option><option>Library</option><option>Cleanliness</option><option>Electrical Problems</option><option>Other</option></select></label>
-        <label>Describe the issue<textarea id="description" name="description" rows="4" maxlength="500" placeholder="Tell us where the problem is and what happened..." required></textarea><span class="field-hint">Maximum 500 characters</span></label>
-        <button class="button button-primary full-width" type="submit">Submit complaint <span>→</span></button><p class="form-message" id="formMessage" role="status" aria-live="polite"></p>
-      </form></div>
-      <aside class="side-column"><div class="tip-card"><span class="tip-icon">✦</span><h3>Good to know</h3><p>Every complaint gets a unique ID. Keep it handy to find your report later.</p><div class="tip-divider"></div><p class="tip-small"><b>Be specific.</b> Include the location and details so the issue can be resolved faster.</p></div><div class="help-card"><span class="help-icon">?</span><div><b>Need urgent help?</b><p>For emergencies, contact your college office directly.</p></div></div></aside></section>
-    <section class="panel complaints-panel" id="admin"><div class="section-heading table-heading"><div><p class="eyebrow">TRACK & MANAGE</p><h2>Complaint records</h2><p class="muted">View reports and update their status from the admin panel.</p></div><span class="record-count" id="recordCount">0 records</span></div>
-      <div class="toolbar"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search by ID, name, roll no..." aria-label="Search complaints"></label><select id="statusFilter" aria-label="Filter by status"><option value="All">All statuses</option><option>Pending</option><option>In Progress</option><option>Resolved</option></select><button class="button button-secondary" id="refreshButton" type="button">↻ Refresh</button></div>
-      <div class="table-wrap"><table><thead><tr><th>COMPLAINT</th><th>STUDENT</th><th>CATEGORY</th><th>DESCRIPTION</th><th>STATUS</th><th>ADMIN ACTION</th></tr></thead><tbody id="complaintsBody"><tr><td colspan="6" class="empty-cell">Loading complaints...</td></tr></tbody></table></div>
-      <div class="table-footer"><span>CampusCare · Student services</span><span id="lastUpdated">Waiting for data</span></div>
+
+  <main class="container main-layout">
+    <div id="backendWarningBanner" class="warning-banner" style="display:none;">
+      <strong>Outdated Server Binary Detected:</strong> Stop the old <code>complaint_server.exe</code> (<code>Ctrl+C</code>), recompile <code>server.cpp</code> + <code>ComplaintManager.cpp</code>, and restart it.
+    </div>
+
+    <!-- Floating KPI Summary Deck -->
+    <section class="stats-grid" aria-label="Complaint Statistics">
+      <div class="stat-card stat-total">
+        <div class="stat-top">
+          <span class="stat-label">Total Tickets</span>
+          <span class="stat-icon icon-total">∑</span>
+        </div>
+        <strong class="stat-value" id="totalCount">0</strong>
+        <span class="stat-sub">All logged requests</span>
+      </div>
+
+      <div class="stat-card stat-high">
+        <div class="stat-top">
+          <span class="stat-label">High Priority</span>
+          <span class="stat-icon icon-high">!</span>
+        </div>
+        <strong class="stat-value" id="highPriorityCount">0</strong>
+        <span class="stat-sub">Active urgent issues</span>
+      </div>
+
+      <div class="stat-card stat-pending">
+        <div class="stat-top">
+          <span class="stat-label">Pending</span>
+          <span class="stat-icon icon-pending">◷</span>
+        </div>
+        <strong class="stat-value" id="pendingCount">0</strong>
+        <span class="stat-sub">Awaiting assignment</span>
+      </div>
+
+      <div class="stat-card stat-progress">
+        <div class="stat-top">
+          <span class="stat-label">In Progress</span>
+          <span class="stat-icon icon-progress">⚙</span>
+        </div>
+        <strong class="stat-value" id="progressCount">0</strong>
+        <span class="stat-sub">Maintenance underway</span>
+      </div>
+
+      <div class="stat-card stat-resolved">
+        <div class="stat-top">
+          <span class="stat-label">Resolved</span>
+          <span class="stat-icon icon-resolved">✓</span>
+        </div>
+        <strong class="stat-value" id="resolvedCount">0</strong>
+        <span class="stat-sub">Completed &amp; closed</span>
+      </div>
     </section>
-    <footer><span>© 2026 CampusCare · C++ subject project</span><span>Built with C++ · HTML · CSS · JavaScript</span></footer>
-  </main><script src="script.js"></script>
-</body></html>
+
+    <!-- Main Workspace -->
+    <div class="content-grid">
+      <!-- Left Sticky Form Card -->
+      <aside class="card form-section">
+        <div class="card-header">
+          <span class="section-eyebrow">New Ticket</span>
+          <h2>Report an Issue</h2>
+          <p>Provide your room number and issue details. Priority is classified automatically.</p>
+        </div>
+
+        <form id="complaintForm" novalidate>
+          <div class="form-group">
+            <label for="studentName">Student Full Name <span class="req">*</span></label>
+            <input type="text" id="studentName" name="studentName" placeholder="e.g. Anil Kumar" maxlength="80" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rollNumber">Roll Number <span class="req">*</span></label>
+              <input type="text" id="rollNumber" name="rollNumber" placeholder="AP25110010838" maxlength="30" required />
+            </div>
+
+            <div class="form-group">
+              <label for="roomNumber">Room No. / Block <span class="req">*</span></label>
+              <input type="text" id="roomNumber" name="roomNumber" placeholder="V-711 / B-204" maxlength="30" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Issue Category <span class="req">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">Choose a category...</option>
+              <option value="Wi-Fi and Internet">Wi-Fi and Internet</option>
+              <option value="Classroom & Lab">Classroom &amp; Lab</option>
+              <option value="Hostel & Mess">Hostel &amp; Mess</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Plumbing Problem">Plumbing Problem</option>
+              <option value="Cleanliness & Hygiene">Cleanliness &amp; Hygiene</option>
+              <option value="Library">Library</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Problem Description <span class="req">*</span></label>
+            <textarea id="description" name="description" rows="4" placeholder="Describe what happened, exact location, and severity..." maxlength="500" required></textarea>
+            <div class="char-counter"><span id="charCount">0</span> / 500</div>
+          </div>
+
+          <!-- Read-only System Auto-Priority Indicator -->
+          <div class="auto-priority-box" aria-live="polite">
+            <div class="auto-priority-top">
+              <span class="auto-priority-label">Auto-Detected Priority</span>
+              <span id="detectedPriorityBadge" class="prio-badge prio-medium">Medium Priority</span>
+            </div>
+            <p class="auto-priority-note">System-locked based on category &amp; urgency keywords (read-only for students).</p>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
+            Submit Complaint Ticket →
+          </button>
+        </form>
+      </aside>
+
+      <!-- Right Complaint Feed & Controls -->
+      <section class="card list-section">
+        <div class="card-header list-header">
+          <div>
+            <span class="section-eyebrow">Live Queue</span>
+            <h2>Complaint Dashboard Directory</h2>
+            <p>Filter tickets by priority, resolution status, category, or search by room and roll number.</p>
+          </div>
+          <button id="exportCsvBtn" class="btn btn-outline btn-sm" type="button">
+            ⬇ Export CSV
+          </button>
+        </div>
+
+        <div class="filters-bar">
+          <div class="search-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search" id="searchInput" placeholder="Search ticket ID, room no., name, or roll no..." />
+          </div>
+          <select id="priorityFilter" aria-label="Filter by Priority">
+            <option value="ALL">All Priorities</option>
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
+          </select>
+          <select id="statusFilter" aria-label="Filter by Status">
+            <option value="ALL">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+          <select id="categoryFilter" aria-label="Filter by Category">
+            <option value="ALL">All Categories</option>
+            <option value="Wi-Fi and Internet">Wi-Fi and Internet</option>
+            <option value="Classroom & Lab">Classroom &amp; Lab</option>
+            <option value="Hostel & Mess">Hostel &amp; Mess</option>
+            <option value="Electrical">Electrical</option>
+            <option value="Plumbing Problem">Plumbing Problem</option>
+            <option value="Cleanliness & Hygiene">Cleanliness &amp; Hygiene</option>
+            <option value="Library">Library</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div id="complaintsContainer" class="complaints-list">
+          <div class="empty-state">Loading complaints from server...</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
