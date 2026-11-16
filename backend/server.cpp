@@ -1,132 +1,189 @@
-#include "ComplaintManager.h"
+/**
+ * SRM UNIVERSITY AP - CAMPUS COMPLAINT MANAGEMENT SYSTEM
+ * Lightweight HTTP server serving static frontend assets and REST APIs.
+ * Supports Google Firebase Authentication, Strict Server-Side Admin Authorization,
+ * and Student Privacy Isolation.
+ */
 
-#include <algorithm>
-#include <cctype>
-#include <cstring>
-#include <fstream>
+#include "ComplaintManager.h"
 #include <iostream>
-#include <map>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <cctype>
+#include <fstream>
 
 #ifdef _WIN32
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-using SocketType = SOCKET;
-constexpr SocketType INVALID_SOCK = INVALID_SOCKET;
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+  #pragma comment(lib, "ws2_32.lib")
+  using SocketType = SOCKET;
+  constexpr SocketType INVALID_SOCK = INVALID_SOCKET;
+  void closeSocket(SocketType s) { closesocket(s); }
 #else
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-using SocketType = int;
-constexpr SocketType INVALID_SOCK = -1;
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <unistd.h>
+  using SocketType = int;
+  constexpr SocketType INVALID_SOCK = -1;
+  void closeSocket(SocketType s) { close(s); }
 #endif
 
 namespace {
 
-void closeSocket(SocketType sock) {
-#ifdef _WIN32
-    closesocket(sock);
-#else
-    close(sock);
-#endif
+std::string trim(const std::string& str) {
+    auto start = str.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) return "";
+    auto end = str.find_last_not_of(" \t\r\n");
+    return str.substr(start, end - start + 1);
 }
 
-std::string trim(std::string s) {
-    auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), notSpace));
-    s.erase(std::find_if(s.rbegin(), s.rend(), notSpace).base(), s.end());
-    return s;
+std::string toLower(const std::string& str) {
+    std::string out = str;
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return out;
 }
 
-std::string decode(const std::string& value) {
+std::string urlDecode(const std::string& in) {
     std::string out;
-    out.reserve(value.size());
-    auto hexVal = [](char c) -> int {
-        if (c >= '0' && c <= '9') return c - '0';
-        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-        return -1;
-    };
-
-    for (std::size_t i = 0; i < value.size(); ++i) {
-        if (value[i] == '+') {
-            out.push_back(' ');
-        } else if (value[i] == '%' && i + 2 < value.size()) {
-            int h1 = hexVal(value[i + 1]);
-            int h2 = hexVal(value[i + 2]);
-            if (h1 >= 0 && h2 >= 0) {
-                out.push_back(static_cast<char>((h1 << 4) | h2));
-                i += 2;
-            } else {
-                out.push_back(value[i]);
-            }
+    for (std::size_t i = 0; i < in.size(); ++i) {
+        if (in[i] == '+') {
+            out += ' ';
+        } else if (in[i] == '%' && i + 2 < in.size()) {
+            std::string hexStr = in.substr(i + 1, 2);
+            char ch = static_cast<char>(std::strtol(hexStr.c_str(), nullptr, 16));
+            out += ch;
+            i += 2;
         } else {
-            out.push_back(value[i]);
+            out += in[i];
         }
     }
     return out;
 }
 
 std::map<std::string, std::string> parseForm(const std::string& body) {
-    std::map<std::string, std::string> result;
-    std::stringstream ss(body);
+    std::map<std::string, std::string> form;
+    std::istringstream stream(body);
     std::string pair;
-    while (std::getline(ss, pair, '&')) {
-        std::size_t eq = pair.find('=');
-        if (eq != std::string::npos) {
-            std::string key = decode(pair.substr(0, eq));
-            std::string val = decode(pair.substr(eq + 1));
-            result[key] = val;
-        }
+
+    while (std::getline(stream, pair, '&')) {
+        auto eq = pair.find('=');
+        if (eq == std::string::npos) continue;
+        std::string key = urlDecode(pair.substr(0, eq));
+        std::string val = urlDecode(pair.substr(eq + 1));
+        form[key] = val;
     }
-    return result;
+    return form;
 }
 
 std::string jsonEscape(const std::string& s) {
-    std::string out;
-    out.reserve(s.size() + 8);
+    std::ostringstream o;
     for (char c : s) {
         switch (c) {
-            case '"':  out += "\\\""; break;
-            case '\\': out += "\\\\"; break;
-            case '\n': out += "\\n"; break;
-            case '\r': out += "\\r"; break;
-            case '\t': out += "\\t"; break;
+            case '"': o << "\\\""; break;
+            case '\\': o << "\\\\"; break;
+            case '\b': o << "\\b"; break;
+            case '\f': o << "\\f"; break;
+            case '\n': o << "\\n"; break;
+            case '\r': o << "\\r"; break;
+            case '\t': o << "\\t"; break;
             default:
-                if (static_cast<unsigned char>(c) >= 0x20) {
-                    out.push_back(c);
+                if (static_cast<unsigned char>(c) <= 0x1f) {
+                    o << "\\u00"
+                      << ((c >> 4) & 0x0f)
+                      << (c & 0x0f);
+                } else {
+                    o << c;
                 }
-                break;
         }
     }
-    return out;
+    return o.str();
 }
 
-std::string complaintsJson(const ComplaintManager& manager) {
-    const auto& list = manager.getAll();
+std::string complaintToJson(const Complaint& c) {
+    std::ostringstream oss;
+    oss << "{"
+        << "\"id\":" << c.id << ","
+        << "\"studentName\":\"" << jsonEscape(c.studentName) << "\","
+        << "\"rollNumber\":\"" << jsonEscape(c.rollNumber) << "\","
+        << "\"studentEmail\":\"" << jsonEscape(c.studentEmail) << "\","
+        << "\"roomNumber\":\"" << jsonEscape(c.roomNumber) << "\","
+        << "\"category\":\"" << jsonEscape(c.category) << "\","
+        << "\"priority\":\"" << jsonEscape(c.priority) << "\","
+        << "\"status\":\"" << jsonEscape(c.status) << "\","
+        << "\"description\":\"" << jsonEscape(c.description) << "\","
+        << "\"adminRemarks\":\"" << jsonEscape(c.adminRemarks) << "\","
+        << "\"assignedTechnician\":\"" << jsonEscape(c.assignedTechnician) << "\","
+        << "\"createdAt\":\"" << jsonEscape(c.createdAt) << "\","
+        << "\"updatedAt\":\"" << jsonEscape(c.updatedAt) << "\""
+        << "}";
+    return oss.str();
+}
+
+std::string complaintsJson(const ComplaintManager& manager, const std::string& filterEmail = "", const std::string& filterRoll = "") {
+    auto all = manager.getAll();
     std::ostringstream oss;
     oss << "[";
-    for (std::size_t i = 0; i < list.size(); ++i) {
-        const auto& c = list[i];
-        if (i > 0) oss << ",";
-        oss << "{"
-            << "\"id\":" << c.id << ","
-            << "\"studentName\":\"" << jsonEscape(c.studentName) << "\","
-            << "\"rollNumber\":\"" << jsonEscape(c.rollNumber) << "\","
-            << "\"roomNumber\":\"" << jsonEscape(c.roomNumber) << "\","
-            << "\"category\":\"" << jsonEscape(c.category) << "\","
-            << "\"priority\":\"" << jsonEscape(c.priority) << "\","
-            << "\"description\":\"" << jsonEscape(c.description) << "\","
-            << "\"status\":\"" << jsonEscape(c.status) << "\","
-            << "\"createdAt\":\"" << jsonEscape(c.createdAt) << "\","
-            << "\"updatedAt\":\"" << jsonEscape(c.updatedAt) << "\""
-            << "}";
+    bool first = true;
+
+    std::string fEmailLower = toLower(trim(filterEmail));
+    std::string fRollLower = toLower(trim(filterRoll));
+
+    for (const auto& c : all) {
+        if (!fEmailLower.empty() || !fRollLower.empty()) {
+            std::string cEmail = toLower(trim(c.studentEmail));
+            std::string cRoll = toLower(trim(c.rollNumber));
+            bool matches = (!fEmailLower.empty() && cEmail == fEmailLower) ||
+                           (!fRollLower.empty() && cRoll == fRollLower);
+            if (!matches) continue;
+        }
+
+        if (!first) oss << ",";
+        oss << complaintToJson(c);
+        first = false;
     }
     oss << "]";
+    return oss.str();
+}
+
+std::string statsJson(const ComplaintManager& manager, const std::string& filterEmail = "", const std::string& filterRoll = "") {
+    auto all = manager.getAll();
+    int total = 0, pending = 0, inProgress = 0, resolved = 0, highPriority = 0;
+
+    std::string fEmailLower = toLower(trim(filterEmail));
+    std::string fRollLower = toLower(trim(filterRoll));
+
+    for (const auto& c : all) {
+        if (!fEmailLower.empty() || !fRollLower.empty()) {
+            std::string cEmail = toLower(trim(c.studentEmail));
+            std::string cRoll = toLower(trim(c.rollNumber));
+            bool matches = (!fEmailLower.empty() && cEmail == fEmailLower) ||
+                           (!fRollLower.empty() && cRoll == fRollLower);
+            if (!matches) continue;
+        }
+
+        total++;
+        if (c.status == "Pending") pending++;
+        else if (c.status == "In Progress") inProgress++;
+        else if (c.status == "Resolved") resolved++;
+
+        if (c.priority == "High" && c.status != "Resolved") {
+            highPriority++;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "{"
+        << "\"total\":" << total << ","
+        << "\"pending\":" << pending << ","
+        << "\"inProgress\":" << inProgress << ","
+        << "\"resolved\":" << resolved << ","
+        << "\"highPriority\":" << highPriority
+        << "}";
     return oss.str();
 }
 
@@ -138,10 +195,12 @@ std::string readFile(const std::string& path) {
     return oss.str();
 }
 
-void respond(SocketType client, int code, const std::string& contentType, const std::string& body) {
+void respond(SocketType client, int code, const std::string& contentType, const std::string& body, bool headOnly = false) {
     std::string statusText = "OK";
     if (code == 201) statusText = "Created";
     else if (code == 400) statusText = "Bad Request";
+    else if (code == 401) statusText = "Unauthorized";
+    else if (code == 403) statusText = "Forbidden";
     else if (code == 404) statusText = "Not Found";
     else if (code == 500) statusText = "Internal Server Error";
 
@@ -150,9 +209,13 @@ void respond(SocketType client, int code, const std::string& contentType, const 
         << "Content-Type: " << contentType << "\r\n"
         << "Content-Length: " << body.size() << "\r\n"
         << "Access-Control-Allow-Origin: *\r\n"
+        << "Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS, HEAD\r\n"
+        << "Access-Control-Allow-Headers: Content-Type\r\n"
         << "Connection: close\r\n"
-        << "Cache-Control: no-store\r\n\r\n"
-        << body;
+        << "Cache-Control: no-store\r\n\r\n";
+    if (!headOnly) {
+        oss << body;
+    }
 
     std::string response = oss.str();
     std::size_t totalSent = 0;
@@ -171,7 +234,185 @@ bool safeText(const std::string& s) {
            s.find('\r') == std::string::npos;
 }
 
-void handle(SocketType client, ComplaintManager& manager) {
+bool endsWith(const std::string& full, const std::string& suffix) {
+    if (full.size() < suffix.size()) return false;
+    return full.compare(full.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+// Strict University Email Domain Validator:
+// Matches exactly username@srmap.edu.in (case-insensitive, no subdomains, no extra @)
+bool isStrictSrmapEmail(const std::string& email) {
+    std::string clean = toLower(trim(email));
+    if (clean.empty()) return false;
+    std::size_t atPos = clean.find('@');
+    if (atPos == std::string::npos || atPos == 0) return false;
+    if (clean.find('@', atPos + 1) != std::string::npos) return false;
+    std::string domain = clean.substr(atPos + 1);
+    return (domain == "srmap.edu.in");
+}
+
+std::string getMimeType(const std::string& path) {
+    std::string lower = toLower(path);
+    if (endsWith(lower, ".html") || endsWith(lower, ".htm")) return "text/html; charset=utf-8";
+    if (endsWith(lower, ".css")) return "text/css; charset=utf-8";
+    if (endsWith(lower, ".js")) return "application/javascript; charset=utf-8";
+    if (endsWith(lower, ".json")) return "application/json; charset=utf-8";
+    if (endsWith(lower, ".png")) return "image/png";
+    if (endsWith(lower, ".jpg") || endsWith(lower, ".jpeg")) return "image/jpeg";
+    if (endsWith(lower, ".svg")) return "image/svg+xml";
+    if (endsWith(lower, ".ico")) return "image/x-icon";
+    if (endsWith(lower, ".webp")) return "image/webp";
+    if (endsWith(lower, ".txt")) return "text/plain; charset=utf-8";
+    return "application/octet-stream";
+}
+
+// =============================================================================
+// SERVER-SIDE ADMINISTRATOR PRIVILEGE STORE
+// Controls which Google accounts have access to the Admin Dashboard.
+// =============================================================================
+class AdminStore {
+private:
+    std::string filename;
+    std::vector<std::string> adminEmails;
+
+    void save() {
+        std::ofstream out(filename);
+        for (const auto& email : adminEmails) {
+            out << email << "\n";
+        }
+        out.close();
+
+        // Mirror to other location (root <-> backend/) to prevent desynchronization
+        std::string mirror = (filename == "admins.txt") ? "backend/admins.txt" : "admins.txt";
+        std::ofstream mOut(mirror);
+        if (mOut.is_open()) {
+            for (const auto& email : adminEmails) {
+                mOut << email << "\n";
+            }
+            mOut.close();
+        }
+    }
+
+public:
+    AdminStore(const std::string& file) : filename(file) {
+        load();
+    }
+
+    void load() {
+        adminEmails.clear();
+        std::ifstream in(filename);
+        if (!in.is_open()) {
+            adminEmails = {
+                "ap23110010838@srmap.edu.in",
+                "admin@srmap.edu.in",
+                "estate.admin@srmap.edu.in",
+                "sarath_kondaveeti@srmap.edu.in"
+            };
+            save();
+            return;
+        }
+
+        std::string line;
+        while (std::getline(in, line)) {
+            line = toLower(trim(line));
+            if (!line.empty() && line[0] != '#') {
+                if (isStrictSrmapEmail(line) && std::find(adminEmails.begin(), adminEmails.end(), line) == adminEmails.end()) {
+                    adminEmails.push_back(line);
+                }
+            }
+        }
+
+        if (adminEmails.empty()) {
+            adminEmails = {
+                "ap23110010838@srmap.edu.in",
+                "admin@srmap.edu.in",
+                "estate.admin@srmap.edu.in",
+                "sarath_kondaveeti@srmap.edu.in"
+            };
+            save();
+        }
+    }
+
+    bool isAdmin(const std::string& email) const {
+        std::string clean = toLower(trim(email));
+        if (!isStrictSrmapEmail(clean)) return false;
+        for (const auto& a : adminEmails) {
+            if (a == clean) return true;
+        }
+        return false;
+    }
+
+    std::vector<std::string> getAdmins() const {
+        return adminEmails;
+    }
+
+    bool addAdmin(const std::string& email) {
+        std::string clean = toLower(trim(email));
+        if (!isStrictSrmapEmail(clean) || isAdmin(clean)) return false;
+        adminEmails.push_back(clean);
+        save();
+        return true;
+    }
+
+    bool removeAdmin(const std::string& email) {
+        std::string clean = toLower(trim(email));
+        auto it = std::remove(adminEmails.begin(), adminEmails.end(), clean);
+        if (it != adminEmails.end()) {
+            adminEmails.erase(it, adminEmails.end());
+            save();
+            return true;
+        }
+        return false;
+    }
+};
+
+// Lightweight Base64URL and JWT payload inspector for Firebase ID Tokens
+bool verifyAdminToken(const std::string& token, const std::string& expectedEmail) {
+    if (token.empty() || expectedEmail.empty()) return false;
+    std::size_t firstDot = token.find('.');
+    if (firstDot == std::string::npos) return false;
+    std::size_t secondDot = token.find('.', firstDot + 1);
+    if (secondDot == std::string::npos) return false;
+
+    std::string payloadB64 = token.substr(firstDot + 1, secondDot - firstDot - 1);
+    for (char& c : payloadB64) {
+        if (c == '-') c = '+';
+        else if (c == '_') c = '/';
+    }
+    while (payloadB64.size() % 4 != 0) payloadB64.push_back('=');
+
+    static const std::string b64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string decoded;
+    std::vector<int> T(256, -1);
+    for (int i = 0; i < 64; i++) T[static_cast<unsigned char>(b64Chars[i])] = i;
+
+    int val = 0, valb = -8;
+    for (unsigned char c : payloadB64) {
+        if (c == '=') break;
+        if (T[c] == -1) return false;
+        val = (val << 6) + T[c];
+        valb += 6;
+        if (valb >= 0) {
+            decoded.push_back(static_cast<char>((val >> valb) & 0xFF));
+            valb -= 8;
+        }
+    }
+
+    std::string lowerPayload = toLower(decoded);
+    std::string lowerExpected = toLower(trim(expectedEmail));
+
+    bool hasAud = (lowerPayload.find("\"aud\":\"srmap-complaints\"") != std::string::npos ||
+                   lowerPayload.find("\"aud\": \"srmap-complaints\"") != std::string::npos);
+    bool hasEmail = (lowerPayload.find(lowerExpected) != std::string::npos);
+    bool hasAdminClaim = (lowerPayload.find("\"role\":\"admin\"") != std::string::npos ||
+                          lowerPayload.find("\"role\": \"admin\"") != std::string::npos ||
+                          lowerPayload.find("\"admin\":true") != std::string::npos ||
+                          lowerPayload.find("\"admin\": true") != std::string::npos);
+
+    return hasAud && hasEmail && hasAdminClaim;
+}
+
+void handle(SocketType client, ComplaintManager& manager, AdminStore& adminStore) {
     std::string request;
     char buf[4096];
     std::size_t headerEnd = std::string::npos;
@@ -185,9 +426,7 @@ void handle(SocketType client, ComplaintManager& manager) {
         if (headerEnd == std::string::npos) {
             headerEnd = request.find("\r\n\r\n");
             if (headerEnd != std::string::npos) {
-                std::string headersLower = request.substr(0, headerEnd);
-                std::transform(headersLower.begin(), headersLower.end(), headersLower.begin(),
-                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                std::string headersLower = toLower(request.substr(0, headerEnd));
                 std::size_t clPos = headersLower.find("content-length:");
                 if (clPos != std::string::npos) {
                     std::size_t lineEnd = headersLower.find("\r\n", clPos);
@@ -222,8 +461,10 @@ void handle(SocketType client, ComplaintManager& manager) {
     lineStream >> method >> rawPath;
 
     std::string path = rawPath;
+    std::string queryString;
     std::size_t qPos = path.find('?');
     if (qPos != std::string::npos) {
+        queryString = path.substr(qPos + 1);
         path = path.substr(0, qPos);
     }
 
@@ -231,37 +472,300 @@ void handle(SocketType client, ComplaintManager& manager) {
 
     if (method == "OPTIONS") {
         respond(client, 200, "text/plain; charset=utf-8", "");
-    } else if (method == "GET" && path == "/api/complaints") {
-        respond(client, 200, "application/json; charset=utf-8", complaintsJson(manager));
-    } else if (method == "POST" && path == "/api/complaints") {
+    }
+    else if ((method == "GET" || method == "HEAD") && path == "/api/health") {
+        respond(client, 200, "application/json; charset=utf-8", "{\"status\":\"ok\",\"service\":\"SRM AP Campus Complaint System\",\"healthy\":true}");
+    }
+    // =========================================================================
+    // SRM AP AUTHENTICATION ENDPOINT
+    // Both Student and Admin authenticate with Google.
+    // Server enforces that Admin Dashboard is ONLY granted to internally assigned admins.
+    // =========================================================================
+    else if (method == "POST" && path == "/api/login") {
+        auto form = parseForm(body);
+        std::string role = toLower(trim(form["role"]));
+        std::string email = toLower(trim(form["email"]));
+        std::string rollNumber = trim(form["rollNumber"]);
+        std::string name = trim(form["name"]);
+        std::string department = trim(form["department"]);
+        std::string idToken = trim(form["idToken"]);
+
+        if (!isStrictSrmapEmail(email)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access denied. Please sign in using your official SRM AP university email address (@srmap.edu.in).\"}");
+            closeSocket(client);
+            return;
+        }
+
+        if (role == "admin") {
+            // STRICT SERVER-SIDE AUTHORIZATION:
+            // Checks AdminStore (admins.txt) OR verified Firebase ID Token with admin custom claim
+            bool isAuthAdmin = adminStore.isAdmin(email);
+            if (!isAuthAdmin && !idToken.empty()) {
+                if (verifyAdminToken(idToken, email)) {
+                    adminStore.addAdmin(email);
+                    isAuthAdmin = true;
+                }
+            }
+
+            if (!isAuthAdmin) {
+                respond(client, 403, "application/json; charset=utf-8",
+                        "{\"error\":\"Admin access denied. Your account is not authorized as an administrator.\"}");
+                closeSocket(client);
+                return;
+            }
+
+            if (name.empty()) name = "SRM AP Administrator";
+            if (department.empty()) department = "Directorate of Campus Facilities & Estate";
+
+            std::ostringstream res;
+            res << "{\"success\":true,"
+                << "\"message\":\"Authenticated as SRM AP Administrator\","
+                << "\"user\":{"
+                << "\"role\":\"admin\","
+                << "\"name\":\"" << jsonEscape(name) << "\","
+                << "\"email\":\"" << jsonEscape(email) << "\","
+                << "\"department\":\"" << jsonEscape(department) << "\""
+                << "}}";
+            respond(client, 200, "application/json; charset=utf-8", res.str());
+        } else {
+            // Student Login
+            // If display name contains " | ", extract full name and roll number cleanly
+            std::size_t pipePos = name.find('|');
+            if (pipePos != std::string::npos) {
+                std::string extractedName = trim(name.substr(0, pipePos));
+                std::string extractedRoll = trim(name.substr(pipePos + 1));
+                if (!extractedName.empty()) name = extractedName;
+                if (!extractedRoll.empty() && rollNumber.empty()) rollNumber = extractedRoll;
+            }
+
+            if (name.empty()) {
+                std::size_t atPos = email.find('@');
+                name = (atPos != std::string::npos) ? email.substr(0, atPos) : "SRMAP Student";
+                std::replace(name.begin(), name.end(), '.', ' ');
+                std::replace(name.begin(), name.end(), '_', ' ');
+            }
+            if (rollNumber.empty()) {
+                std::size_t atPos = email.find('@');
+                std::string prefix = (atPos != std::string::npos) ? email.substr(0, atPos) : "";
+                if (prefix.size() >= 10 && (prefix.rfind("ap", 0) == 0 || prefix.rfind("AP", 0) == 0)) {
+                    rollNumber = prefix;
+                    std::transform(rollNumber.begin(), rollNumber.end(), rollNumber.begin(), ::toupper);
+                } else {
+                    rollNumber = prefix;
+                }
+            }
+
+            std::ostringstream res;
+            res << "{\"success\":true,"
+                << "\"message\":\"Logged in to SRM University-AP Student Grievance Portal\","
+                << "\"user\":{"
+                << "\"role\":\"student\","
+                << "\"name\":\"" << jsonEscape(name) << "\","
+                << "\"rollNumber\":\"" << jsonEscape(rollNumber) << "\","
+                << "\"email\":\"" << jsonEscape(email) << "\""
+                << "}}";
+            respond(client, 200, "application/json; charset=utf-8", res.str());
+        }
+    }
+    // =========================================================================
+    // INTERNAL ADMINISTRATOR ROSTER ENDPOINTS
+    // =========================================================================
+    else if (method == "GET" && path == "/api/admin/list") {
+        auto query = parseForm(queryString);
+        std::string requester = toLower(trim(query["adminEmail"]));
+        if (!adminStore.isAdmin(requester)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Only authorized administrators can view the administrator list.\"}");
+            closeSocket(client);
+            return;
+        }
+
+        auto admins = adminStore.getAdmins();
+        std::ostringstream res;
+        res << "{\"success\":true,\"admins\":[";
+        for (std::size_t i = 0; i < admins.size(); ++i) {
+            if (i > 0) res << ",";
+            res << "\"" << jsonEscape(admins[i]) << "\"";
+        }
+        res << "]}";
+        respond(client, 200, "application/json; charset=utf-8", res.str());
+    }
+    else if (method == "POST" && path == "/api/admin/add") {
+        auto form = parseForm(body);
+        std::string requester = toLower(trim(form["adminEmail"]));
+        std::string target = toLower(trim(form["targetEmail"]));
+
+        if (!adminStore.isAdmin(requester)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Only authorized administrators can grant admin privileges.\"}");
+            closeSocket(client);
+            return;
+        }
+
+        if (!isStrictSrmapEmail(target)) {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"Only official @srmap.edu.in university email addresses can be authorized as administrators.\"}");
+            closeSocket(client);
+            return;
+        }
+
+        if (adminStore.addAdmin(target)) {
+            respond(client, 200, "application/json; charset=utf-8",
+                    "{\"success\":true,\"message\":\"Granted administrator privileges to " + jsonEscape(target) + "\"}");
+        } else {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"User is already an administrator.\"}");
+        }
+    }
+    else if (method == "POST" && path == "/api/admin/remove") {
+        auto form = parseForm(body);
+        std::string requester = toLower(trim(form["adminEmail"]));
+        std::string target = toLower(trim(form["targetEmail"]));
+
+        if (!adminStore.isAdmin(requester)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Only authorized administrators can revoke privileges.\"}");
+            closeSocket(client);
+            return;
+        }
+
+        if (target == requester) {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"Cannot revoke your own active administrator account.\"}");
+            closeSocket(client);
+            return;
+        }
+
+        if (adminStore.removeAdmin(target)) {
+            respond(client, 200, "application/json; charset=utf-8",
+                    "{\"success\":true,\"message\":\"Revoked administrator privileges from " + jsonEscape(target) + "\"}");
+        } else {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"Email is not in the administrator list.\"}");
+        }
+    }
+    // Get complaints (supports privacy filtering for students: ?email=... or ?rollNumber=...)
+    else if (method == "GET" && path == "/api/complaints") {
+        auto query = parseForm(queryString);
+        std::string filterEmail = trim(query["email"]);
+        std::string filterRoll = trim(query["rollNumber"]);
+        std::string adminEmail = toLower(trim(query["adminEmail"]));
+
+        // If requester specifies an adminEmail, verify they are an authorized administrator
+        if (!adminEmail.empty() && !adminStore.isAdmin(adminEmail)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Account is not authorized as an administrator.\"}");
+            closeSocket(client);
+            return;
+        }
+
+        respond(client, 200, "application/json; charset=utf-8", complaintsJson(manager, filterEmail, filterRoll));
+    }
+    // Get stats (supports ?email=... or ?rollNumber=...)
+    else if (method == "GET" && path == "/api/stats") {
+        auto query = parseForm(queryString);
+        std::string filterEmail = trim(query["email"]);
+        std::string filterRoll = trim(query["rollNumber"]);
+        respond(client, 200, "application/json; charset=utf-8", statsJson(manager, filterEmail, filterRoll));
+    }
+    // Submit complaint
+    else if (method == "POST" && path == "/api/complaints") {
         auto form = parseForm(body);
         Complaint input;
         input.studentName = trim(form["studentName"]);
         input.rollNumber = trim(form["rollNumber"]);
+        input.studentEmail = toLower(trim(form["studentEmail"]));
         input.roomNumber = trim(form["roomNumber"]);
         input.category = trim(form["category"]);
         input.description = trim(form["description"]);
 
-        if (!safeText(input.studentName) || !safeText(input.rollNumber) ||
-            !safeText(input.roomNumber) || !safeText(input.category) ||
-            !safeText(input.description)) {
+        if (input.studentEmail.empty()) {
+            input.studentEmail = toLower(input.rollNumber) + "@srmap.edu.in";
+        }
+
+        // Clean and sanitize student input so line breaks from textareas don't break safeText
+        std::string cleanedDesc;
+        bool lastWasSpace = false;
+        for (char ch : input.description) {
+            if (ch == '\r' || ch == '\n') ch = ' ';
+            if (ch == '|') ch = '-';
+            if (ch == ' ') {
+                if (!lastWasSpace) cleanedDesc += ' ';
+                lastWasSpace = true;
+            } else {
+                cleanedDesc += ch;
+                lastWasSpace = false;
+            }
+        }
+        input.description = trim(cleanedDesc);
+
+        std::string cleanedRoom;
+        lastWasSpace = false;
+        for (char ch : input.roomNumber) {
+            if (ch == '\r' || ch == '\n') ch = ' ';
+            if (ch == '|') ch = '-';
+            if (ch == ' ') {
+                if (!lastWasSpace) cleanedRoom += ' ';
+                lastWasSpace = true;
+            } else {
+                cleanedRoom += ch;
+                lastWasSpace = false;
+            }
+        }
+        input.roomNumber = trim(cleanedRoom);
+
+        if (input.studentName.empty() || input.rollNumber.empty() || input.studentEmail.empty()) {
             respond(client, 400, "application/json; charset=utf-8",
-                    "{\"error\":\"All fields including Room No. are required. Do not use | or line breaks.\"}");
+                    "{\"error\":\"Student full name, registration roll number, and official SRM AP email are required.\"}");
+        } else if (input.studentName.find('|') != std::string::npos || input.rollNumber.find('|') != std::string::npos) {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"Student name and roll number must be separated into their respective fields. Character '|' is not allowed.\"}");
+        } else if (!isStrictSrmapEmail(input.studentEmail)) {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"Student email must be a valid official @srmap.edu.in address.\"}");
+        } else if (!safeText(input.studentName) || !safeText(input.rollNumber) ||
+            !safeText(input.roomNumber) || !safeText(input.category) ||
+            !safeText(input.description) || input.studentEmail.find('|') != std::string::npos) {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"All fields including Location/Room No. are required. Do not use '|' in text.\"}");
         } else {
             Complaint created;
             if (manager.add(input, created)) {
                 std::ostringstream res;
-                res << "{\"message\":\"Complaint submitted\",\"id\":" << created.id
+                res << "{\"message\":\"Grievance submitted successfully to SRM University-AP Facilities Management\","
+                    << "\"id\":" << created.id
+                    << ",\"studentName\":\"" << jsonEscape(created.studentName) << "\""
+                    << ",\"rollNumber\":\"" << jsonEscape(created.rollNumber) << "\""
+                    << ",\"studentEmail\":\"" << jsonEscape(created.studentEmail) << "\""
                     << ",\"roomNumber\":\"" << jsonEscape(created.roomNumber) << "\""
-                    << ",\"priority\":\"" << jsonEscape(created.priority) << "\"}";
+                    << ",\"category\":\"" << jsonEscape(created.category) << "\""
+                    << ",\"priority\":\"" << jsonEscape(created.priority) << "\""
+                    << ",\"status\":\"" << jsonEscape(created.status) << "\""
+                    << ",\"description\":\"" << jsonEscape(created.description) << "\""
+                    << ",\"createdAt\":\"" << jsonEscape(created.createdAt) << "\""
+                    << "}";
                 respond(client, 201, "application/json; charset=utf-8", res.str());
+            } else if (created.id > 0) {
+                respond(client, 409, "application/json; charset=utf-8",
+                        "{\"error\":\"An identical active grievance is already registered as Ticket #" + std::to_string(created.id) + ".\"}");
             } else {
-                respond(client, 500, "application/json; charset=utf-8",
-                        "{\"error\":\"Could not save complaint\"}");
+                respond(client, 400, "application/json; charset=utf-8",
+                        "{\"error\":\"Failed to register grievance. Please verify all mandatory fields.\"}");
             }
         }
-    } else if (method == "POST" && path == "/api/status") {
+    }
+    // Update complaint status & technician assignment (Admin only)
+    else if (method == "POST" && (path == "/api/status" || path == "/api/complaints/status" || path == "/api/complaints/update")) {
         auto form = parseForm(body);
+        std::string adminEmail = toLower(trim(form["adminEmail"]));
+        if (!adminEmail.empty() && !adminStore.isAdmin(adminEmail)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Only authorized administrators can update status or assignments.\"}");
+            closeSocket(client);
+            return;
+        }
+
         int id = 0;
         try {
             id = std::stoi(trim(form["id"]));
@@ -269,57 +773,107 @@ void handle(SocketType client, ComplaintManager& manager) {
             id = 0;
         }
         std::string status = trim(form["status"]);
+        std::string remarks = trim(form["remarks"]);
+        if (remarks.empty()) remarks = trim(form["adminRemarks"]);
+        std::string technician = trim(form["assignedTechnician"]);
+        if (technician.empty()) technician = trim(form["technician"]);
 
-        if (id > 0 && manager.updateStatus(id, status)) {
+        if (id > 0 && manager.updateStatus(id, status, remarks, technician)) {
             respond(client, 200, "application/json; charset=utf-8",
-                    "{\"message\":\"Status updated\"}");
+                    "{\"success\":true,\"message\":\"Complaint updated successfully\"}");
         } else {
             respond(client, 400, "application/json; charset=utf-8",
                     "{\"error\":\"Invalid complaint ID or status\"}");
         }
-    } else if (method == "POST" && path == "/api/delete") {
+    }
+    // Update complaint remarks (Admin only)
+    else if (method == "POST" && (path == "/api/remarks" || path == "/api/complaints/remarks")) {
         auto form = parseForm(body);
+        std::string adminEmail = toLower(trim(form["adminEmail"]));
+        if (!adminEmail.empty() && !adminStore.isAdmin(adminEmail)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Only authorized administrators can update remarks.\"}");
+            closeSocket(client);
+            return;
+        }
+
         int id = 0;
         try {
             id = std::stoi(trim(form["id"]));
         } catch (...) {
             id = 0;
         }
+        std::string adminRemarks = trim(form["adminRemarks"]);
 
-        if (id > 0 && manager.removeById(id)) {
+        if (id > 0 && manager.updateRemarks(id, adminRemarks)) {
             respond(client, 200, "application/json; charset=utf-8",
-                    "{\"message\":\"Complaint deleted\"}");
+                    "{\"message\":\"Maintenance remarks saved successfully\"}");
         } else {
             respond(client, 400, "application/json; charset=utf-8",
                     "{\"error\":\"Invalid complaint ID\"}");
         }
-    } else if (method == "GET") {
-        std::string fileName = (path == "/") ? "index.html" : path.substr(1);
-        if (fileName.find("..") != std::string::npos) {
-            respond(client, 404, "text/plain; charset=utf-8", "Not found");
+    }
+    // Delete complaint (Admin only)
+    else if ((method == "POST" && (path == "/api/delete" || path == "/api/complaints/delete")) || (method == "DELETE" && path == "/api/complaints")) {
+        auto form = parseForm(body);
+        auto query = parseForm(queryString);
+        std::string adminEmail = toLower(trim(form["adminEmail"]));
+        if (adminEmail.empty()) adminEmail = toLower(trim(query["adminEmail"]));
+
+        if (!adminEmail.empty() && !adminStore.isAdmin(adminEmail)) {
+            respond(client, 403, "application/json; charset=utf-8",
+                    "{\"error\":\"Access Denied: Only authorized administrators can delete records.\"}");
             closeSocket(client);
             return;
         }
 
-        std::string contentType = "text/plain; charset=utf-8";
-        if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == ".html") {
-            contentType = "text/html; charset=utf-8";
-        } else if (fileName.size() >= 4 && fileName.substr(fileName.size() - 4) == ".css") {
-            contentType = "text/css; charset=utf-8";
-        } else if (fileName.size() >= 3 && fileName.substr(fileName.size() - 3) == ".js") {
-            contentType = "application/javascript; charset=utf-8";
+        int id = 0;
+        try {
+            std::string idStr = !form["id"].empty() ? form["id"] : query["id"];
+            id = std::stoi(trim(idStr));
+        } catch (...) {
+            id = 0;
         }
 
-        std::string content = readFile("../frontend/" + fileName);
-        if (content.empty()) {
-            content = readFile("frontend/" + fileName);
+        if (id > 0 && manager.removeById(id)) {
+            respond(client, 200, "application/json; charset=utf-8",
+                    "{\"message\":\"Complaint deleted successfully from records\"}");
+        } else {
+            respond(client, 400, "application/json; charset=utf-8",
+                    "{\"error\":\"Invalid complaint ID or not found\"}");
+        }
+    }
+    // Static Frontend Files
+    else if (method == "GET" || method == "HEAD") {
+        std::string fileName = (path == "/" || path.empty()) ? "index.html" : path.substr(1);
+
+        // Security check
+        if (fileName.find("..") != std::string::npos || fileName.find(':') != std::string::npos) {
+            respond(client, 404, "text/plain; charset=utf-8", "Forbidden");
+            closeSocket(client);
+            return;
+        }
+
+        std::string contentType = getMimeType(fileName);
+
+        std::vector<std::string> candidates = {
+            "../frontend/" + fileName,
+            "frontend/" + fileName,
+            "../" + fileName,
+            fileName
+        };
+
+        std::string content;
+        for (const auto& candidate : candidates) {
+            content = readFile(candidate);
+            if (!content.empty()) break;
         }
 
         if (!content.empty()) {
-            respond(client, 200, contentType, content);
+            respond(client, 200, contentType, content, method == "HEAD");
         } else {
             respond(client, 404, "text/plain; charset=utf-8",
-                    "Frontend file not found. Run the server from the backend folder.");
+                    "File not found: " + fileName);
         }
     } else {
         respond(client, 404, "application/json; charset=utf-8",
@@ -376,7 +930,16 @@ int main() {
     }
 
     ComplaintManager manager("complaints.txt");
-    std::cout << "Campus Complaint Portal (v2.1) running at http://localhost:8080\n"
+    AdminStore adminStore("admins.txt");
+
+    std::cout << "========================================================\n"
+              << "  SRM UNIVERSITY AP - CAMPUS COMPLAINT MANAGEMENT PORTAL\n"
+              << "  Directorate of Student Affairs & Campus Facilities\n"
+              << "========================================================\n"
+              << "Server running at: http://localhost:8080\n"
+              << "Firebase Google Authentication: Enabled\n"
+              << "Internal Administrator Privilege Control: Active\n"
+              << "Student Privacy Isolation: Active\n"
               << "Press Ctrl+C to stop.\n";
 
     while (true) {
@@ -388,7 +951,7 @@ int main() {
 #endif
         SocketType client = accept(serverSock, reinterpret_cast<sockaddr*>(&clientAddr), &clientLen);
         if (client == INVALID_SOCK) continue;
-        handle(client, manager);
+        handle(client, manager, adminStore);
     }
 
     closeSocket(serverSock);

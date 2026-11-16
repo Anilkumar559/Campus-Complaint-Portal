@@ -1,0 +1,15 @@
+# Firebase Service Account Credentials & Private Keys (NEVER COMMIT)
+serviceAccountKey.json
+*service-account*.json
+*.key.json
+.env
+
+# Node Dependencies
+node_modules/
+
+# Logs & Temporary Files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db

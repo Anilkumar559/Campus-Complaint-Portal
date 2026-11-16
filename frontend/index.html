@@ -3,214 +3,701 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CampusCare — Student Grievance &amp; Facility Portal</title>
+  <title>SRM University-AP | Campus Grievance &amp; Facility Portal</title>
+  <link rel="icon" type="image/png" href="assets/SRMAP-Logo-Main.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Firebase Web SDK (Compat libraries for Google Authentication) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
 </head>
 <body>
-  <!-- Hero Header -->
-  <header class="hero-header">
-    <div class="container hero-topbar">
-      <div class="brand">
-        <div class="brand-logo" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="m9 12 2 2 4-4"/>
-          </svg>
-        </div>
-        <div>
-          <h1>CampusCare</h1>
-          <p class="subtitle">Campus Facility &amp; Student Grievance Command Center</p>
+
+  <!-- ========================================================= -->
+  <!-- AUTHENTICATION VIEW: REAL-TIME SRM UNIVERSITY AP PORTAL   -->
+  <!-- Background: SRM University AP Entrance (srmap-entrance)    -->
+  <!-- ========================================================= -->
+  <div id="loginSection" class="srm-portal-screen">
+    <!-- Left: Campus Background Scene & Official Logo -->
+    <div class="portal-campus-side">
+      <div class="campus-overlay"></div>
+      <div class="campus-brand-center">
+        <img src="assets/SRMAP-Logo-Main.png" alt="SRM University AP - Andhra Pradesh" class="campus-main-logo" />
+        <div class="campus-title-block">
+          <h2 class="portal-tagline-main">Campus Care &amp; Grievance Portal</h2>
+          <p class="portal-tagline-sub">Directorate of Student Affairs &amp; Campus Facility Operations</p>
+          <div class="portal-location-badge">
+            <span>📍 Neerukonda, Mangalagiri Mandal, Amaravati – 522 240</span>
+          </div>
         </div>
       </div>
+      <div class="campus-caption">
+        <span>SRM UNIVERSITY - AP • NEERUKONDA, AMARAVATI</span>
+      </div>
+    </div>
 
-      <div class="topbar-actions">
-        <span id="serverStatus" class="status-pill status-checking">Connecting...</span>
-        <button id="refreshBtn" class="btn btn-glass" type="button" title="Sync records with C++ server">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
-            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-            <path d="M16 16h5v5"/>
+    <!-- Right: Clean White Login Card with ONLY Student Login and Admin Login -->
+    <!-- (No username, email, or password fields appear on the homepage)      -->
+    <div class="portal-login-side">
+      <div class="login-box-card">
+        <div class="login-card-header">
+          <img src="assets/SRMAP-Logo-Main.png" alt="SRM University AP" class="login-card-logo" />
+          <h1 class="portal-login-title">LOGIN</h1>
+          <p class="portal-login-desc">SRM University-AP Campus Care &amp; Grievance Portal</p>
+        </div>
+
+        <!-- Primary Action: Student Google Login -->
+        <button type="button" id="googleSignInBtn" class="btn btn-google-srm" aria-label="Sign in with Google">
+          <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
           </svg>
-          Sync Data
+          <span style="font-weight: 700;">Sign in with Google</span>
+        </button>
+
+        <!-- College Email Restriction Hint -->
+        <p class="srm-domain-notice">
+          <span class="info-icon">ℹ</span> Students must use their college email ID.
+        </p>
+
+        <!-- Official Authority Login Buttons -->
+        <div class="official-role-buttons">
+          <button type="button" id="btnAdminLogin" class="btn btn-srm-olive" aria-label="Admin Login">
+            Admin Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- MAIN APP VIEW: AUTHENTICATED GRIEVANCE DASHBOARD          -->
+  <!-- ========================================================= -->
+  <div id="dashboardSection" class="dashboard-view" style="display: none;">
+    <!-- Top University Masthead -->
+    <header class="univ-header">
+      <div class="container univ-topbar">
+        <div class="univ-brand">
+          <img src="assets/SRMAP-Logo-Main.png" alt="SRM University Andhra Pradesh" class="header-logo-banner" />
+          <div class="univ-divider"></div>
+          <div class="portal-identity">
+            <h2 class="portal-name">Campus Care Portal</h2>
+            <span class="portal-tagline">Directorate of Student Affairs &amp; Campus Facilities</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- User Profile & Session Controls -->
+          <div class="user-session-badge">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-details">
+              <strong id="sessionUserName">User Name</strong>
+              <div class="user-meta-sub">
+                <span id="sessionUserRoleBadge" class="role-badge role-student">Student</span>
+                <span id="sessionUserSubtext" class="user-subtext">student@srmap.edu.in</span>
+              </div>
+            </div>
+            <button id="logoutBtn" class="btn btn-outline-danger btn-xs" title="Log out of session">
+              Log Out ⎋
+            </button>
+          </div>
+
+          <button id="refreshBtn" class="btn btn-glass" type="button" title="Synchronize records">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+              <path d="M16 16h5v5"/>
+            </svg>
+            Sync
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sub-Navbar Role Banner -->
+    <div class="role-banner-bar">
+      <div class="container role-banner-content">
+        <div class="banner-left">
+          <span id="roleBannerIcon" class="banner-icon">🎓</span>
+          <div>
+            <strong id="roleBannerTitle">Student Self-Service Portal</strong>
+            <p id="roleBannerDesc">Displaying grievances registered by your account. Other students' complaints are strictly private.</p>
+          </div>
+        </div>
+        <div class="banner-right">
+          <span class="campus-tag">📍 SRM University-AP, Neerukonda, Amaravati</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Workspace -->
+    <main class="container main-layout">
+      <!-- Floating KPI Summary Cards (Auto-tailored to Student vs Admin) -->
+      <section class="stats-grid" aria-label="Complaint Statistics">
+        <div class="stat-card stat-total">
+          <div class="stat-top">
+            <span class="stat-label" id="statLabelTotal">My Total Tickets</span>
+            <span class="stat-icon icon-total">📋</span>
+          </div>
+          <strong class="stat-value" id="totalCount">0</strong>
+          <span class="stat-sub" id="statSubTotal">Registered under your account</span>
+        </div>
+
+        <div class="stat-card stat-high">
+          <div class="stat-top">
+            <span class="stat-label">High Priority</span>
+            <span class="stat-icon icon-high">⚡</span>
+          </div>
+          <strong class="stat-value" id="highPriorityCount">0</strong>
+          <span class="stat-sub">Critical emergency hazards</span>
+        </div>
+
+        <div class="stat-card stat-pending">
+          <div class="stat-top">
+            <span class="stat-label">Pending</span>
+            <span class="stat-icon icon-pending">⏳</span>
+          </div>
+          <strong class="stat-value" id="pendingCount">0</strong>
+          <span class="stat-sub">Awaiting technician assignment</span>
+        </div>
+
+        <div class="stat-card stat-progress">
+          <div class="stat-top">
+            <span class="stat-label">In Progress</span>
+            <span class="stat-icon icon-progress">🛠️</span>
+          </div>
+          <strong class="stat-value" id="progressCount">0</strong>
+          <span class="stat-sub">Technicians dispatched</span>
+        </div>
+
+        <div class="stat-card stat-resolved">
+          <div class="stat-top">
+            <span class="stat-label">Resolved</span>
+            <span class="stat-icon icon-resolved">✅</span>
+          </div>
+          <strong class="stat-value" id="resolvedCount">0</strong>
+          <span class="stat-sub">Completed &amp; verified</span>
+        </div>
+      </section>
+
+      <!-- Two-Column Workspace -->
+      <div class="content-columns">
+        <!-- LEFT COLUMN: STUDENT SUBMISSION FORM OR ADMIN DISPATCH -->
+        <aside class="left-panel">
+          <!-- STUDENT GRIEVANCE REGISTRATION FORM -->
+          <div id="studentFormCard" class="card form-card">
+            <div class="card-header">
+              <span class="section-eyebrow">Ticket Submission</span>
+              <h2>Register Grievance</h2>
+              <p>Submit campus maintenance issues to Directorate of Student Affairs &amp; Facilities.</p>
+            </div>
+
+            <form id="complaintForm" class="complaint-form" novalidate>
+              <!-- Notice shown if Google account display name lacks required 'Name | Roll' format -->
+              <div id="studentProfileNotice" style="display: none; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 0.85rem; color: #9a3412;">
+                <strong>⚠️ Google Profile Incomplete:</strong> Your official SRM AP Google account display name must be formatted as <code>Full Name | Registration Number</code> (e.g. <code>Sarath Kumar Kondaveeti | AP25110010838</code>). Please contact the university administrator to update your profile.
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="studentName">Student Name <span class="req">*</span></label>
+                  <input type="text" id="studentName" name="studentName" placeholder="Auto-populated from Google profile" readonly required />
+                </div>
+                <div class="form-group">
+                  <label for="rollNumber">Roll Number <span class="req">*</span></label>
+                  <input type="text" id="rollNumber" name="rollNumber" placeholder="Auto-populated from Google profile" readonly required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="studentEmail">SRM AP Email ID <span class="req">*</span></label>
+                <input type="email" id="studentEmail" name="studentEmail" placeholder="Auto-populated from Google account" readonly required />
+                <span class="input-hint">Official verified SRM AP account (non-editable)</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="campusBlockSelect">Campus Block / Area <span class="req">*</span></label>
+                  <select id="campusBlockSelect" name="campusBlockSelect" required>
+                    <option value="Ganga Hostel">Ganga Hostel (Boys)</option>
+                    <option value="Krishna Hostel">Krishna Hostel (Boys)</option>
+                    <option value="Yamuna Hostel">Yamuna Hostel (Girls)</option>
+                    <option value="Godavari Hostel">Godavari Hostel (Girls)</option>
+                    <option value="Academic Block">Vikram Sarabhai Academic Block</option>
+                    <option value="Central Dining Hall">Dining Hall &amp; Mess</option>
+                    <option value="Central Library">Central Library</option>
+                    <option value="Sports Complex">Indoor / Outdoor Sports Complex</option>
+                    <option value="Health Centre">Campus Health Centre</option>
+                    <option value="Other Area">Other Campus Facility</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="roomNumber">Room / Specific Spot <span class="req">*</span></label>
+                  <input type="text" id="roomNumber" name="roomNumber" placeholder="Room number or specific area" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="category">Grievance Category <span class="req">*</span></label>
+                <select id="category" name="category" required>
+                  <option value="Wi-Fi and Internet">Wi-Fi &amp; Campus Internet</option>
+                  <option value="Electrical">Electrical (Power, Light, Socket, Geyser)</option>
+                  <option value="Plumbing Problem">Plumbing (Water, Leakage, Drainage)</option>
+                  <option value="Hostel & Mess">Hostel &amp; Mess Services</option>
+                  <option value="Classroom & Lab">Classroom, Lab &amp; Audio-Visual</option>
+                  <option value="Air Conditioning">Air Conditioning (AC &amp; Ventilation)</option>
+                  <option value="Cleanliness & Hygiene">Cleanliness &amp; Housekeeping</option>
+                  <option value="Library">Library &amp; Study Areas</option>
+                  <option value="Security & Safety">Security &amp; Safety</option>
+                  <option value="Other">Other Miscellaneous Issue</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="description">Problem Description <span class="req">*</span></label>
+                <textarea id="description" name="description" rows="4" placeholder="Detail the issue, location, and severity so maintenance can dispatch the right crew..." maxlength="500" required></textarea>
+                <div class="char-counter"><span id="charCount">0</span> / 500</div>
+              </div>
+
+              <!-- Real-Time Auto-Priority Engine Indicator -->
+              <div class="auto-priority-box" aria-live="polite">
+                <div class="auto-priority-top">
+                  <span class="auto-priority-label">Smart Auto-Classified Priority</span>
+                  <span id="detectedPriorityBadge" class="prio-badge prio-medium">Medium Priority</span>
+                </div>
+                <p class="auto-priority-note">Analyzes urgency keywords in real-time to prioritize safety hazards.</p>
+              </div>
+
+              <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg">
+                Submit Grievance Ticket →
+              </button>
+            </form>
+          </div>
+
+          <!-- ADMIN DISPATCH & EMERGENCY PANEL -->
+          <div id="adminActionCard" class="card admin-dispatch-card" style="display: none;">
+            <div class="card-header">
+              <span class="section-eyebrow">Facility Dispatch</span>
+              <h2>Maintenance Command</h2>
+              <p>Operational shortcuts for SRM AP facility wardens and engineers.</p>
+            </div>
+
+            <div class="admin-quick-stats">
+              <div class="dispatch-stat-row">
+                <span>Critical Emergencies:</span>
+                <strong id="adminCriticalCount" class="text-danger">0</strong>
+              </div>
+              <div class="dispatch-stat-row">
+                <span>Unassigned / Pending:</span>
+                <strong id="adminUnassignedCount" class="text-warning">0</strong>
+              </div>
+            </div>
+
+            <div class="admin-shortcuts">
+              <button type="button" id="filterHighUrgentBtn" class="btn btn-outline-danger btn-block btn-sm">
+                🚨 View All High Urgency Tickets
+              </button>
+              <button type="button" id="filterPendingBtn" class="btn btn-outline-warning btn-block btn-sm">
+                ⏳ View Pending Assignment
+              </button>
+              <button type="button" id="filterGangaHostelBtn" class="btn btn-glass-dark btn-block btn-sm">
+                🏢 Quick Filter: Hostel Blocks
+              </button>
+              <button type="button" id="resetAdminFiltersBtn" class="btn btn-glass-dark btn-block btn-sm">
+                🔄 Clear All Filters
+              </button>
+            </div>
+
+            <div class="admin-help-box">
+              <strong>Admin Responsibilities:</strong>
+              <ul>
+                <li>Update ticket to <em>In Progress</em> when technician is dispatched.</li>
+                <li>Add official notes in remarks regarding actions taken or technician dispatched.</li>
+                <li>Mark as <em>Resolved</em> only after physical inspection.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- INTERNAL ADMINISTRATOR PRIVILEGES MANAGEMENT CARD -->
+          <div id="adminPrivilegesCard" class="card admin-dispatch-card" style="display: none; margin-top: 18px;">
+            <div class="card-header">
+              <span class="section-eyebrow">Access Control</span>
+              <h2>Administrator Roster</h2>
+              <p>Internally assigned Google accounts with Admin Dashboard access.</p>
+            </div>
+
+            <!-- Add Admin Form -->
+            <form id="addAdminForm" style="margin-top: 10px;">
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label for="newAdminEmail" style="font-size: 0.8rem; font-weight: 600;">Grant Admin Privileges:</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="email" id="newAdminEmail" placeholder="e.g. user@gmail.com" required style="flex: 1; padding: 7px 10px; font-size: 0.84rem; border: 1px solid var(--border); border-radius: 6px;" />
+                  <button type="submit" id="btnAddAdmin" class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 7px 12px; font-size: 0.82rem;">
+                    + Grant
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Admin List Container -->
+            <div style="margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Active Administrators:</span>
+                <span id="adminCountBadge" class="prio-badge prio-low" style="font-size: 0.72rem; padding: 2px 7px;">0</span>
+              </div>
+              <ul id="adminRosterUl" style="list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: #ffffff;">
+                <li style="padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.82rem;">Loading administrators...</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ADMINISTRATIVE CSV EXPORT REPORTS CARD (ADMIN ONLY) -->
+          <div id="adminExportCard" class="card admin-dispatch-card" style="display: none; margin-top: 18px;">
+            <div class="card-header">
+              <span class="section-eyebrow">Audit &amp; Reporting</span>
+              <h2>Export Grievance Reports</h2>
+              <p>Official status logs &amp; audit records for SRM AP facility management.</p>
+            </div>
+
+            <!-- Quick Status Export Buttons -->
+            <div class="admin-export-controls">
+              <button type="button" id="btnExportAll" class="btn btn-export-all btn-sm" title="Export all complaints across all statuses and categories">
+                📊 Export All Complaints
+              </button>
+              <div class="export-status-row">
+                <button type="button" id="btnExportPending" class="btn btn-export-pending btn-xs" title="Export only Pending complaints">
+                  ⏳ Pending
+                </button>
+                <button type="button" id="btnExportInProgress" class="btn btn-export-progress btn-xs" title="Export only In Progress complaints">
+                  🛠️ In Progress
+                </button>
+                <button type="button" id="btnExportResolved" class="btn btn-export-resolved btn-xs" title="Export only Resolved complaints">
+                  ✅ Resolved
+                </button>
+              </div>
+            </div>
+
+            <!-- Category Export Group -->
+            <div class="admin-export-category-box">
+              <label for="exportCategorySelect" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">
+                Export by Complaint Category:
+              </label>
+              <div style="display: flex; gap: 8px;">
+                <select id="exportCategorySelect" style="flex: 1; padding: 7px 10px; font-size: 0.84rem; border: 1px solid var(--border); border-radius: 6px;">
+                  <option value="Electrical">Electrical</option>
+                  <option value="Plumbing Problem">Plumbing Problem</option>
+                  <option value="Wi-Fi and Internet">Wi-Fi and Internet</option>
+                  <option value="Hostel & Mess">Hostel &amp; Mess</option>
+                  <option value="Classroom & Lab">Classroom &amp; Lab</option>
+                  <option value="Air Conditioning">Air Conditioning</option>
+                  <option value="Cleanliness & Hygiene">Cleanliness &amp; Hygiene</option>
+                  <option value="Library">Library</option>
+                  <option value="Security & Safety">Security &amp; Safety</option>
+                  <option value="Other">Other</option>
+                </select>
+                <button type="button" id="btnExportCategory" class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 7px 12px; font-size: 0.82rem;">
+                  ⬇ Export
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- RIGHT COLUMN: COMPLAINTS QUEUE -->
+        <section class="card list-section">
+          <div class="card-header list-header">
+            <div>
+              <span class="section-eyebrow" id="queueEyebrow">Personal Tickets</span>
+              <h2 id="queueHeaderTitle">My Registered Grievances</h2>
+              <p id="queueHeaderSub">Displaying only grievances filed under your student credentials. Other students' complaints are strictly private.</p>
+            </div>
+            <!-- NOTE: Export CSV is completely removed from student portal per requirements -->
+          </div>
+
+          <!-- Filters Bar -->
+          <div class="filters-bar">
+            <div class="search-box">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input type="search" id="searchInput" placeholder="Search by student name, roll #, ID, email, room..." />
+            </div>
+
+            <select id="statusFilter" aria-label="Filter by Status">
+              <option value="ALL">All Statuses</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="In Progress">🛠️ In Progress</option>
+              <option value="Resolved">✅ Resolved</option>
+            </select>
+
+            <select id="priorityFilter" aria-label="Filter by Priority">
+              <option value="ALL">All Priorities</option>
+              <option value="High">⚡ High Priority</option>
+              <option value="Medium">Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
+
+            <select id="categoryFilter" aria-label="Filter by Category">
+              <option value="ALL">All Categories</option>
+              <option value="Wi-Fi and Internet">Wi-Fi &amp; Internet</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Plumbing Problem">Plumbing &amp; Water</option>
+              <option value="Hostel & Mess">Hostel &amp; Mess</option>
+              <option value="Classroom & Lab">Classroom &amp; Lab</option>
+              <option value="Air Conditioning">Air Conditioning</option>
+              <option value="Cleanliness & Hygiene">Cleanliness</option>
+              <option value="Library">Library</option>
+              <option value="Security & Safety">Security &amp; Safety</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <select id="campusBlockFilter" aria-label="Filter by Campus Location">
+              <option value="ALL">All Locations</option>
+              <option value="Ganga Hostel">Ganga Hostel</option>
+              <option value="Krishna Hostel">Krishna Hostel</option>
+              <option value="Yamuna Hostel">Yamuna Hostel</option>
+              <option value="Godavari Hostel">Godavari Hostel</option>
+              <option value="Academic Block">Academic Block</option>
+              <option value="Central Dining Hall">Dining Hall</option>
+              <option value="Central Library">Central Library</option>
+              <option value="Sports Complex">Sports Complex</option>
+              <option value="Health Centre">Health Centre</option>
+              <option value="Other Area">Other Area</option>
+            </select>
+
+            <div class="date-filter-wrapper" title="Filter complaints by submission date">
+              <input type="date" id="dateFilter" aria-label="Filter by submission date" />
+              <button type="button" id="clearDateBtn" class="btn-clear-date" title="Clear date filter" style="display: none;">✕</button>
+            </div>
+          </div>
+
+          <!-- Complaints List / Table Container -->
+          <div id="complaintsContainer" class="complaints-list">
+            <div class="empty-state">Loading grievances...</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- GOOGLE ACCOUNT SIGN-IN MODAL (FALLBACK WHEN NO API KEY)  -->
+  <!-- ========================================================= -->
+  <div id="googleAccountModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card google-modal-card">
+      <div class="google-modal-header">
+        <svg width="28" height="28" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <h3>Sign in with Google</h3>
+        <p>Enter your official SRM University-AP Google Workspace account (<code>@srmap.edu.in</code>)</p>
+      </div>
+
+      <form id="customGoogleForm" class="modal-form" style="margin-top: 16px;">
+        <div class="form-group">
+          <label for="customGoogleName">Full Name <span class="req">*</span></label>
+          <input type="text" id="customGoogleName" placeholder="Enter your full name" required />
+        </div>
+        <div class="form-group">
+          <label for="customGoogleEmail">SRM AP Google Email ID <span class="req">*</span></label>
+          <input type="email" id="customGoogleEmail" placeholder="your_name@srmap.edu.in" required />
+          <span class="input-hint">Must end with <code>@srmap.edu.in</code></span>
+        </div>
+        <div class="form-group">
+          <label for="customGoogleRole">Role <span class="req">*</span></label>
+          <select id="customGoogleRole">
+            <option value="student">Student (Self-Service Grievances)</option>
+            <option value="admin">Administrator (Campus-Wide Management)</option>
+          </select>
+        </div>
+        <button type="submit" id="submitCustomGoogleBtn" class="btn btn-primary btn-block">
+          Continue with SRM AP Google Account →
+        </button>
+      </form>
+
+      <div class="google-modal-footer">
+        <button type="button" id="closeGoogleModalBtn" class="btn btn-outline btn-sm">
+          Cancel
         </button>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="container main-layout">
-    <div id="backendWarningBanner" class="warning-banner" style="display:none;">
-      <strong>Outdated Server Binary Detected:</strong> Stop the old <code>complaint_server.exe</code> (<code>Ctrl+C</code>), recompile <code>server.cpp</code> + <code>ComplaintManager.cpp</code>, and restart it.
+  <!-- ========================================================= -->
+  <!-- ACCESS DENIED MODAL (UNAUTHORIZED ADMIN ATTEMPT)         -->
+  <!-- ========================================================= -->
+  <div id="accessDeniedModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card" style="max-width: 460px; text-align: center; padding: 32px 28px;">
+      <div style="width: 56px; height: 56px; margin: 0 auto 16px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #dc2626;">
+        ⛔
+      </div>
+      <h2 style="font-size: 1.35rem; color: #0f172a; margin-bottom: 8px;">Admin Access Denied</h2>
+      <p id="deniedMessageText" style="color: #b91c1c; font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; font-weight: 600;">
+        Admin access denied. Your account is not authorized as an administrator.
+      </p>
+      <p style="color: #64748b; font-size: 0.88rem; margin-bottom: 16px;">
+        Account: <strong id="deniedEmailText" style="color: #0f172a;"></strong>
+      </p>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; text-align: left; font-size: 0.85rem; color: #475569; margin-bottom: 20px;">
+        <p style="margin: 0 0 6px 0;"><strong>Security Policy:</strong></p>
+        <ul style="margin: 0; padding-left: 18px;">
+          <li>Admin accounts must be assigned internally by the system owner.</li>
+          <li>You can still use this Google account to access the Student Grievance Portal.</li>
+        </ul>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" id="btnContinueAsStudent" class="btn btn-primary btn-block">
+          Continue as Student with this Account →
+        </button>
+        <button type="button" id="btnCloseAccessDenied" class="btn btn-outline btn-block">
+          Close &amp; Return to Home
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- Floating KPI Summary Deck -->
-    <section class="stats-grid" aria-label="Complaint Statistics">
-      <div class="stat-card stat-total">
-        <div class="stat-top">
-          <span class="stat-label">Total Tickets</span>
-          <span class="stat-icon icon-total">∑</span>
-        </div>
-        <strong class="stat-value" id="totalCount">0</strong>
-        <span class="stat-sub">All logged requests</span>
+  <!-- ========================================================= -->
+  <!-- USER-FRIENDLY AUTHENTICATION ALERT MODAL                  -->
+  <!-- ========================================================= -->
+  <div id="authAlertModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card" style="max-width: 480px; text-align: center; padding: 28px 24px;">
+      <div id="authAlertIcon" style="width: 52px; height: 52px; margin: 0 auto 14px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px;">
+        ℹ️
+      </div>
+      <h3 id="authAlertTitle" style="font-size: 1.25rem; color: #0f172a; margin-bottom: 8px;">Notice</h3>
+      <p id="authAlertMessage" style="color: #64748b; font-size: 0.9rem; margin-bottom: 16px; line-height: 1.5;"></p>
+
+      <!-- Domain Authorization Helper Box (Only shown for auth/unauthorized-domain) -->
+      <div id="domainHelperBox" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: left; font-size: 0.84rem; color: #475569; margin-bottom: 16px;">
+        <p style="margin: 0 0 6px 0; font-weight: 700; color: #1e293b;">How to add this domain in Firebase Console:</p>
+        <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
+          <li>Open <a href="https://console.firebase.google.com/" target="_blank" rel="noopener" style="color: #2563eb; font-weight: 600;">Firebase Console</a> &gt; <strong>srmap-complaints</strong></li>
+          <li>Navigate to <strong>Authentication &gt; Settings &gt; Authorized domains</strong></li>
+          <li>Click <strong>Add domain</strong> and paste: <code id="currentHostnameCode" style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #0f172a;"></code></li>
+        </ol>
+        <button type="button" id="btnCopyHostname" class="btn btn-outline btn-xs" style="margin-top: 10px; width: 100%;">
+          📋 Copy Current Hostname to Clipboard
+        </button>
       </div>
 
-      <div class="stat-card stat-high">
-        <div class="stat-top">
-          <span class="stat-label">High Priority</span>
-          <span class="stat-icon icon-high">!</span>
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button type="button" id="btnRetryAuth" class="btn btn-primary btn-sm" style="display: none;">
+          Try Sign-In Again
+        </button>
+        <button type="button" id="btnCloseAuthAlert" class="btn btn-outline btn-sm">
+          Understood
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- COMPLAINT DETAILS & MANAGEMENT MODAL (ADMIN / VIEW)      -->
+  <!-- ========================================================= -->
+  <div id="complaintDetailsModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-detail-card" style="max-width: 650px; width: 92%; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-detail-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+        <div>
+          <span class="ticket-id" id="modalTicketId" style="font-size: 0.95rem; font-weight: 800; color: var(--srm-navy);">#000</span>
+          <h2 id="modalDetailTitle" style="font-size: 1.25rem; margin: 4px 0 0 0; color: #0f172a;">Complaint Details</h2>
         </div>
-        <strong class="stat-value" id="highPriorityCount">0</strong>
-        <span class="stat-sub">Active urgent issues</span>
+        <button type="button" id="btnCloseDetailHeader" class="btn btn-outline btn-xs" aria-label="Close modal" style="padding: 4px 10px; font-weight: bold; border-radius: 50%;">✕</button>
       </div>
 
-      <div class="stat-card stat-pending">
-        <div class="stat-top">
-          <span class="stat-label">Pending</span>
-          <span class="stat-icon icon-pending">◷</span>
-        </div>
-        <strong class="stat-value" id="pendingCount">0</strong>
-        <span class="stat-sub">Awaiting assignment</span>
+      <div class="detail-badges-row" style="margin: 14px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <span id="modalDetailStatus" class="status-badge status-pending">Pending</span>
+        <span id="modalDetailPriority" class="prio-badge prio-high">High Priority</span>
+        <span id="modalDetailCategory" class="category-tag">Electrical</span>
       </div>
 
-      <div class="stat-card stat-progress">
-        <div class="stat-top">
-          <span class="stat-label">In Progress</span>
-          <span class="stat-icon icon-progress">⚙</span>
+      <!-- Student & Location Information -->
+      <div class="detail-grid-info" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+        <div>
+          <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Student Name</span>
+          <strong id="modalStudentName" style="color: #0f172a; font-size: 0.95rem;">-</strong>
         </div>
-        <strong class="stat-value" id="progressCount">0</strong>
-        <span class="stat-sub">Maintenance underway</span>
+        <div>
+          <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Registration / Roll No.</span>
+          <strong id="modalRollNumber" style="font-family: monospace; color: var(--srm-navy); font-size: 0.95rem;">-</strong>
+        </div>
+        <div>
+          <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Official University Email</span>
+          <a id="modalStudentEmail" href="#" style="color: var(--srm-accent-blue); font-size: 0.9rem; text-decoration: underline;">-</a>
+        </div>
+        <div>
+          <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 2px;">Campus Location</span>
+          <strong id="modalLocation" style="color: #0f172a; font-size: 0.95rem;">-</strong>
+        </div>
       </div>
 
-      <div class="stat-card stat-resolved">
-        <div class="stat-top">
-          <span class="stat-label">Resolved</span>
-          <span class="stat-icon icon-resolved">✓</span>
-        </div>
-        <strong class="stat-value" id="resolvedCount">0</strong>
-        <span class="stat-sub">Completed &amp; closed</span>
+      <!-- Full Grievance Description -->
+      <div style="margin-bottom: 14px;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Complaint Description</span>
+        <div id="modalDescription" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; color: #1e293b; font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap;"></div>
       </div>
-    </section>
 
-    <!-- Main Workspace -->
-    <div class="content-grid">
-      <!-- Left Sticky Form Card -->
-      <aside class="card form-section">
-        <div class="card-header">
-          <span class="section-eyebrow">New Ticket</span>
-          <h2>Report an Issue</h2>
-          <p>Provide your room number and issue details. Priority is classified automatically.</p>
-        </div>
+      <!-- Timestamps -->
+      <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748b; margin-bottom: 16px; padding: 8px 12px; background: #f8fafc; border-radius: 6px;">
+        <span>Logged Date: <strong id="modalCreatedAt" style="color: #334155;">-</strong></span>
+        <span>Last Updated: <strong id="modalUpdatedAt" style="color: #334155;">-</strong></span>
+      </div>
 
-        <form id="complaintForm" novalidate>
-          <div class="form-group">
-            <label for="studentName">Student Full Name <span class="req">*</span></label>
-            <input type="text" id="studentName" name="studentName" placeholder="e.g. Anil Kumar" maxlength="80" required />
-          </div>
+      <!-- Administrative Management Controls -->
+      <div id="modalAdminControlsSection" style="padding-top: 14px; border-top: 2px dashed #e2e8f0;">
+        <h4 style="margin: 0 0 12px 0; font-size: 0.95rem; color: #001e3d; display: flex; align-items: center; gap: 6px;">
+          🛠️ Facility Management &amp; Dispatch Controls
+        </h4>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="rollNumber">Roll Number <span class="req">*</span></label>
-              <input type="text" id="rollNumber" name="rollNumber" placeholder="AP25110010838" maxlength="30" required />
-            </div>
-
-            <div class="form-group">
-              <label for="roomNumber">Room No. / Block <span class="req">*</span></label>
-              <input type="text" id="roomNumber" name="roomNumber" placeholder="V-711 / B-204" maxlength="30" required />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="category">Issue Category <span class="req">*</span></label>
-            <select id="category" name="category" required>
-              <option value="">Choose a category...</option>
-              <option value="Wi-Fi and Internet">Wi-Fi and Internet</option>
-              <option value="Classroom & Lab">Classroom &amp; Lab</option>
-              <option value="Hostel & Mess">Hostel &amp; Mess</option>
-              <option value="Electrical">Electrical</option>
-              <option value="Plumbing Problem">Plumbing Problem</option>
-              <option value="Cleanliness & Hygiene">Cleanliness &amp; Hygiene</option>
-              <option value="Library">Library</option>
-              <option value="Other">Other</option>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div class="form-group" style="margin: 0;">
+            <label for="modalStatusSelect" style="font-size: 0.8rem; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Update Status:</label>
+            <select id="modalStatusSelect" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.88rem;">
+              <option value="Pending">⏳ Pending</option>
+              <option value="In Progress">🛠️ In Progress</option>
+              <option value="Resolved">✅ Resolved</option>
             </select>
           </div>
 
-          <div class="form-group">
-            <label for="description">Problem Description <span class="req">*</span></label>
-            <textarea id="description" name="description" rows="4" placeholder="Describe what happened, exact location, and severity..." maxlength="500" required></textarea>
-            <div class="char-counter"><span id="charCount">0</span> / 500</div>
+          <div class="form-group" style="margin: 0;">
+            <label for="modalTechnicianInput" style="font-size: 0.8rem; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Assigned Technician / Team:</label>
+            <input type="text" id="modalTechnicianInput" placeholder="e.g. Electrician Rajesh Kumar" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem;" />
           </div>
+        </div>
 
-          <!-- Read-only System Auto-Priority Indicator -->
-          <div class="auto-priority-box" aria-live="polite">
-            <div class="auto-priority-top">
-              <span class="auto-priority-label">Auto-Detected Priority</span>
-              <span id="detectedPriorityBadge" class="prio-badge prio-medium">Medium Priority</span>
-            </div>
-            <p class="auto-priority-note">System-locked based on category &amp; urgency keywords (read-only for students).</p>
-          </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="modalRemarksTextarea" style="font-size: 0.8rem; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">Maintenance Remarks &amp; Resolution Details:</label>
+          <textarea id="modalRemarksTextarea" rows="3" placeholder="Official maintenance notes, actions taken, parts replaced, or resolution details..." style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.86rem; resize: vertical;"></textarea>
+        </div>
 
-          <button type="submit" id="submitBtn" class="btn btn-primary btn-block">
-            Submit Complaint Ticket →
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <button type="button" id="btnDeleteDetailModal" class="btn btn-outline-danger btn-sm" title="Permanently delete this grievance record">
+            🗑 Delete Ticket
           </button>
-        </form>
-      </aside>
-
-      <!-- Right Complaint Feed & Controls -->
-      <section class="card list-section">
-        <div class="card-header list-header">
-          <div>
-            <span class="section-eyebrow">Live Queue</span>
-            <h2>Complaint Dashboard Directory</h2>
-            <p>Filter tickets by priority, resolution status, category, or search by room and roll number.</p>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btnCloseDetailModal" class="btn btn-outline btn-sm">
+              Close
+            </button>
+            <button type="button" id="btnSaveDetailModal" class="btn btn-primary btn-sm" style="font-weight: 700;">
+              Save Changes ✓
+            </button>
           </div>
-          <button id="exportCsvBtn" class="btn btn-outline btn-sm" type="button">
-            ⬇ Export CSV
-          </button>
         </div>
-
-        <div class="filters-bar">
-          <div class="search-box">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-            <input type="search" id="searchInput" placeholder="Search ticket ID, room no., name, or roll no..." />
-          </div>
-          <select id="priorityFilter" aria-label="Filter by Priority">
-            <option value="ALL">All Priorities</option>
-            <option value="High">High Priority</option>
-            <option value="Medium">Medium Priority</option>
-            <option value="Low">Low Priority</option>
-          </select>
-          <select id="statusFilter" aria-label="Filter by Status">
-            <option value="ALL">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-          </select>
-          <select id="categoryFilter" aria-label="Filter by Category">
-            <option value="ALL">All Categories</option>
-            <option value="Wi-Fi and Internet">Wi-Fi and Internet</option>
-            <option value="Classroom & Lab">Classroom &amp; Lab</option>
-            <option value="Hostel & Mess">Hostel &amp; Mess</option>
-            <option value="Electrical">Electrical</option>
-            <option value="Plumbing Problem">Plumbing Problem</option>
-            <option value="Cleanliness & Hygiene">Cleanliness &amp; Hygiene</option>
-            <option value="Library">Library</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div id="complaintsContainer" class="complaints-list">
-          <div class="empty-state">Loading complaints from server...</div>
-        </div>
-      </section>
+      </div>
     </div>
-  </main>
+  </div>
 
-  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 
   <script src="script.js"></script>
 </body>

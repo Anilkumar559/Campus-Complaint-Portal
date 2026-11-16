@@ -16,10 +16,13 @@ public:
     int nextId() const;
 
     bool add(const Complaint& input, Complaint& created);
-    bool updateStatus(int id, const std::string& newStatus);
+    bool updateStatus(int id, const std::string& newStatus, const std::string& remarks = "", const std::string& technician = "");
+    bool updateRemarks(int id, const std::string& remarks);
+    bool updateComplaintDetails(int id, const std::string& status, const std::string& remarks, const std::string& technician);
     bool removeById(int id);
 
     static std::string determinePriority(const std::string& category, const std::string& description);
+    static bool isValidSrmEmail(const std::string& email);
 
 private:
     std::string storagePath_;

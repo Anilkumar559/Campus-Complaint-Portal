@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <!-- Gradients -->
+    <radialGradient id="goldGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fdf3c6" />
+      <stop offset="45%" stop-color="#d4af37" />
+      <stop offset="85%" stop-color="#aa841e" />
+      <stop offset="100%" stop-color="#7a5c10" />
+    </radialGradient>
+    <radialGradient id="innerIvory" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="70%" stop-color="#f7f5e6" />
+      <stop offset="100%" stop-color="#ece6cd" />
+    </radialGradient>
+    <linearGradient id="bronzeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#362907" />
+      <stop offset="50%" stop-color="#1f1803" />
+      <stop offset="100%" stop-color="#362907" />
+    </linearGradient>
+
+    <!-- Curved Text Paths -->
+    <!-- Top arc for SRM UNIVERSITY -->
+    <path id="topArc" d="M 38,120 A 82,82 0 0,1 202,120" fill="none" />
+    <!-- Bottom arc for AP -->
+    <path id="bottomArc" d="M 202,120 A 82,82 0 0,1 38,120" fill="none" />
+  </defs>
+
+  <!-- Outer Double Golden Border -->
+  <circle cx="120" cy="120" r="117" fill="#1f1803" stroke="url(#goldGradient)" stroke-width="3" />
+  <circle cx="120" cy="120" r="111" fill="none" stroke="url(#goldGradient)" stroke-width="1.5" />
+
+  <!-- Sunburst Ray Ring -->
+  <g stroke="url(#goldGradient)" stroke-width="1.2" opacity="0.85">
+    <!-- 36 Radial tick marks around perimeter -->
+    <line x1="120" y1="3" x2="120" y2="9" />
+    <line x1="120" y1="231" x2="120" y2="237" />
+    <line x1="3" y1="120" x2="9" y2="120" />
+    <line x1="231" y1="120" x2="237" y2="120" />
+    <line x1="37" y1="37" x2="42" y2="42" />
+    <line x1="203" y1="37" x2="198" y2="42" />
+    <line x1="37" y1="203" x2="42" y2="198" />
+    <line x1="203" y1="203" x2="198" y2="198" />
+    <line x1="70" y1="14" x2="73" y2="20" />
+    <line x1="170" y1="14" x2="167" y2="20" />
+    <line x1="70" y1="226" x2="73" y2="220" />
+    <line x1="170" y1="226" x2="167" y2="220" />
+    <line x1="14" y1="70" x2="20" y2="73" />
+    <line x1="14" y1="170" x2="20" y2="167" />
+    <line x1="226" y1="70" x2="220" y2="73" />
+    <line x1="226" y1="170" x2="220" y2="167" />
+  </g>
+
+  <!-- Dark Ring for Inscription -->
+  <circle cx="120" cy="120" r="105" fill="url(#bronzeRing)" stroke="url(#goldGradient)" stroke-width="2" />
+
+  <!-- Inner Golden Ring -->
+  <circle cx="120" cy="120" r="70" fill="url(#innerIvory)" stroke="url(#goldGradient)" stroke-width="2.5" />
+
+  <!-- Inner Radiating Rays from center seal to ring -->
+  <g stroke="#aa841e" stroke-width="0.8" opacity="0.45">
+    <line x1="120" y1="70" x2="120" y2="105" />
+    <line x1="120" y1="135" x2="120" y2="170" />
+    <line x1="70" y1="120" x2="105" y2="120" />
+    <line x1="135" y1="120" x2="170" y2="120" />
+  </g>
+
+  <!-- Curving Inscription: "SRM UNIVERSITY" on Top Arc -->
+  <text fill="url(#goldGradient)" font-family="'Times New Roman', Georgia, serif" font-weight="bold" font-size="16.5" letter-spacing="4">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">
+      SRM UNIVERSITY
+    </textPath>
+  </text>
+
+  <!-- Curving Inscription: "AP" on Bottom Arc -->
+  <text fill="url(#goldGradient)" font-family="'Times New Roman', Georgia, serif" font-weight="bold" font-size="17" letter-spacing="6">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">
+      ★ AP ★
+    </textPath>
+  </text>
+
+  <!-- ============================================== -->
+  <!-- SACRED TREE OF WISDOM (KALPAVRIKSHA) IN CENTER -->
+  <!-- ============================================== -->
+  <!-- Tree Trunk & Roots -->
+  <path d="M 120,165 
+           C 118,155 116,145 116,132 
+           C 114,126 112,122 108,118 
+           C 114,120 117,122 120,126 
+           C 123,122 126,120 132,118 
+           C 128,122 126,126 124,132 
+           C 124,145 122,155 120,165 Z" 
+        fill="#5a450c" />
+  <!-- Base Ground & Roots -->
+  <path d="M 104,166 C 112,163 128,163 136,166 C 130,165 110,165 104,166 Z" fill="#443407" />
+  <path d="M 112,164 Q 106,168 100,168 M 128,164 Q 134,168 140,168" stroke="#5a450c" stroke-width="2" stroke-linecap="round" fill="none" />
+
+  <!-- Branches & Leaf Clusters (Tree of Knowledge) -->
+  <g fill="#6d8a32" stroke="#48601c" stroke-width="0.3">
+    <!-- Center Canopy Leaves -->
+    <ellipse cx="120" cy="88" rx="8" ry="12" fill="#7d9c38" />
+    <ellipse cx="114" cy="94" rx="7" ry="11" transform="rotate(-15 114 94)" />
+    <ellipse cx="126" cy="94" rx="7" ry="11" transform="rotate(15 126 94)" />
+    <ellipse cx="120" cy="102" rx="7" ry="10" />
+
+    <!-- Top Canopy Tier -->
+    <ellipse cx="106" cy="85" rx="6" ry="9" transform="rotate(-25 106 85)" fill="#94b044" />
+    <ellipse cx="134" cy="85" rx="6" ry="9" transform="rotate(25 134 85)" fill="#94b044" />
+    <ellipse cx="120" cy="76" rx="6" ry="10" fill="#9db949" />
+    <ellipse cx="112" cy="79" rx="5" ry="8" transform="rotate(-15 112 79)" />
+    <ellipse cx="128" cy="79" rx="5" ry="8" transform="rotate(15 128 79)" />
+
+    <!-- Left Canopy Wing -->
+    <ellipse cx="98" cy="95" rx="7" ry="10" transform="rotate(-35 98 95)" fill="#68842e" />
+    <ellipse cx="90" cy="104" rx="7" ry="10" transform="rotate(-45 90 104)" fill="#789635" />
+    <ellipse cx="85" cy="116" rx="6" ry="9" transform="rotate(-55 85 116)" fill="#637e2a" />
+    <ellipse cx="94" cy="115" rx="6" ry="9" transform="rotate(-40 94 115)" />
+    <ellipse cx="102" cy="106" rx="6" ry="9" transform="rotate(-25 102 106)" fill="#84a23c" />
+    <ellipse cx="100" cy="122" rx="5" ry="8" transform="rotate(-30 100 122)" />
+    <ellipse cx="91" cy="127" rx="5" ry="7" transform="rotate(-50 91 127)" fill="#5a7324" />
+
+    <!-- Right Canopy Wing -->
+    <ellipse cx="142" cy="95" rx="7" ry="10" transform="rotate(35 142 95)" fill="#68842e" />
+    <ellipse cx="150" cy="104" rx="7" ry="10" transform="rotate(45 150 104)" fill="#789635" />
+    <ellipse cx="155" cy="116" rx="6" ry="9" transform="rotate(55 155 116)" fill="#637e2a" />
+    <ellipse cx="146" cy="115" rx="6" ry="9" transform="rotate(40 146 115)" />
+    <ellipse cx="138" cy="106" rx="6" ry="9" transform="rotate(25 138 106)" fill="#84a23c" />
+    <ellipse cx="140" cy="122" rx="5" ry="8" transform="rotate(30 140 122)" />
+    <ellipse cx="149" cy="127" rx="5" ry="7" transform="rotate(50 149 127)" fill="#5a7324" />
+
+    <!-- Intermediate & Golden Accent Leaves -->
+    <ellipse cx="110" cy="112" rx="5" ry="8" transform="rotate(-15 110 112)" fill="#8faa42" />
+    <ellipse cx="130" cy="112" rx="5" ry="8" transform="rotate(15 130 112)" fill="#8faa42" />
+    <ellipse cx="115" cy="120" rx="4" ry="7" fill="#b09532" />
+    <ellipse cx="125" cy="120" rx="4" ry="7" fill="#b09532" />
+    <ellipse cx="106" cy="99" rx="4" ry="6" fill="#c4aa3b" />
+    <ellipse cx="134" cy="99" rx="4" ry="6" fill="#c4aa3b" />
+  </g>
+</svg>

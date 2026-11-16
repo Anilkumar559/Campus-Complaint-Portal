@@ -3,3 +3,13 @@ build/
 *.o
 *.obj
 .DS_Store
+
+# Secrets and Firebase Service Account Keys
+serviceAccountKey.json
+*service-account*.json
+*.key.json
+.env
+
+# Admin Tools Dependencies
+admin-tools/node_modules/
+node_modules/

@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper: Validates official @srmap.edu.in university account
+    function isOfficialSrmapUser() {
+      return request.auth != null &&
+             request.auth.token.email_verified == true &&
+             request.auth.token.email.matches('^[a-zA-Z0-9._%+-]+@srmap[.]edu[.]in$');
+    }
+
+    // Helper: Validates internally authorized administrator via Custom Claims
+    function isAuthorizedAdmin() {
+      return isOfficialSrmapUser() && (
+        request.auth.token.role == 'admin' ||
+        request.auth.token.admin == true
+      );
+    }
+
+    // Complaints collection security rules:
+    // 1. Read: Students may read ONLY their own grievances; Admins can read all complaints.
+    // 2. Create: Official SRM AP students can submit grievances under their own verified email.
+    // 3. Update & Delete: Strictly reserved for authorized administrators.
+    match /complaints/{complaintId} {
+      allow read: if isOfficialSrmapUser() && (
+        resource.data.studentEmail == request.auth.token.email ||
+        isAuthorizedAdmin()
+      );
+      allow create: if isOfficialSrmapUser() &&
+                    request.resource.data.studentEmail == request.auth.token.email;
+      allow update, delete: if isAuthorizedAdmin();
+    }
+
+    // Internal Administrator Roster collection
+    match /admins/{adminId} {
+      allow read: if isAuthorizedAdmin();
+      allow write: if isAuthorizedAdmin();
+    }
+
+    // Deny access to any unspecified paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
