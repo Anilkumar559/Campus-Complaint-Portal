@@ -99,7 +99,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 40px;
+  padding: 40px 40px 65px 40px;
 }
 
 .campus-overlay {
@@ -160,15 +160,21 @@ body {
 }
 
 .portal-location-badge {
-  display: inline-block;
-  background: rgba(0, 30, 61, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 30, 61, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(8px);
   padding: 6px 14px;
   border-radius: var(--radius-full);
   font-size: 0.78rem;
-  color: #e2e8f0;
+  color: #f1f5f9;
   font-weight: 500;
+  max-width: 95%;
+  text-align: center;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 /* Right: Clean White Login Card */
@@ -1634,9 +1640,17 @@ textarea {
     overflow-y: auto;
   }
   .portal-campus-side {
-    min-height: 280px;
+    min-height: auto;
     flex: none;
-    padding: 30px 20px;
+    padding: 34px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  /* On mobile and tablet stacked views, hide the corner photo watermark to prevent overlapping the location badge */
+  .campus-caption {
+    display: none !important;
   }
   .portal-login-side {
     width: 100%;
@@ -2129,8 +2143,13 @@ textarea:focus {
   }
 
   .portal-campus-side {
-    padding: 24px 14px;
-    min-height: 240px;
+    padding: 24px 14px 20px;
+    min-height: auto;
+  }
+
+  .portal-location-badge {
+    font-size: 0.72rem;
+    padding: 5px 12px;
   }
 
   .portal-campus-side h1 {
@@ -2234,8 +2253,13 @@ textarea:focus {
   }
 
   .portal-campus-side {
-    min-height: 200px;
-    padding: 16px 12px;
+    min-height: auto;
+    padding: 18px 12px 16px;
+  }
+
+  .portal-location-badge {
+    font-size: 0.68rem;
+    padding: 4px 10px;
   }
 
   .portal-campus-side h1 {
